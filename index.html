@@ -131,6 +131,9 @@
         .pill-process { background-color: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
         .pill-process .status-dot { background-color: #0ea5e9; }
 
+        .pill-voucher { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .pill-voucher .status-dot { background-color: #10b981; }
+
         .pill-unsubmitted { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
         .pill-unsubmitted .status-dot { background-color: #64748b; }
 
@@ -274,15 +277,15 @@
         <div class="glass-card p-3 mb-4">
             <div class="row g-3 align-items-center">
                 <div class="col-lg-4 col-md-5">
-                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Reporting Period / Auto-Quarter Filter</label>
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Reporting Period / Quarter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-regular fa-calendar"></i></span>
                         <select class="form-select border-start-0 fw-semibold" id="quarterFilter" onchange="filterData()">
                             <option value="all" selected>All Quarters (All Records)</option>
-                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026 / August Syncs)</option>
-                            <option value="2026-Q2">2nd Quarter 2026 (Apr - Jun 2026)</option>
-                            <option value="2026-Q1">1st Quarter 2026 (Jan - Mar 2026)</option>
-                            <option value="2026-Q4">4th Quarter 2026 (Oct - Dec 2026)</option>
+                            <option value="2026-Q3">3rd Quarter 2026 (July - September)</option>
+                            <option value="2026-Q2">2nd Quarter 2026 (April - June)</option>
+                            <option value="2026-Q1">1st Quarter 2026 (January - March)</option>
+                            <option value="2026-Q4">4th Quarter 2026 (October - December)</option>
                             <option value="2025-Q1">1st Quarter 2025</option>
                             <option value="2024-Q4">4th Quarter 2024</option>
                         </select>
@@ -431,7 +434,7 @@
                                     <th>PhilHealth PIN</th>
                                     <th>Admission</th>
                                     <th>Discharge</th>
-                                    <th>Date Filed</th>
+                                    <th>Date Filed (Received)</th>
                                     <th>ICD 10 / RVS</th>
                                     <th class="text-end">Claim Amount</th>
                                     <th class="text-center">Status</th>
@@ -550,9 +553,9 @@
             return l || f || '-';
         }
 
-        // Smart Month & Quarter Resolver (Checks Date Filed, Status Checked Date, Synced Date, or Admission Date)
+        // Exact Date Resolver: Date Filed (Received Date) determines Quarter & Month
         function resolveItemDateInfo(item) {
-            const dateStr = item.date_filed || item.date_status_checked || item.synced_at || item.date_admission;
+            const dateStr = item.date_filed || item.date_admission;
             const d = new Date(dateStr);
             if (!isNaN(d.getTime())) {
                 const yr = d.getFullYear();
@@ -574,7 +577,7 @@
             } else if (s.includes('PROCESS')) {
                 return '<span class="status-pill pill-process"><span class="status-dot"></span>IN PROCESS</span>';
             } else if (s.includes('VOUCHER')) {
-                return '<span class="status-pill pill-cheque"><span class="status-dot"></span>WITH VOUCHER</span>';
+                return '<span class="status-pill pill-voucher"><span class="status-dot"></span>WITH VOUCHER</span>';
             }
             return `<span class="status-pill pill-unsubmitted"><span class="status-dot"></span>${s || 'UNSUBMITTED'}</span>`;
         }
@@ -591,7 +594,7 @@
                 };
 
                 // Fetch Annex C
-                const resC = await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?select=*&order=id.asc`, { headers });
+                const resC = await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?select=*&order=id.desc`, { headers });
                 if (!resC.ok) throw new Error(await resC.text());
                 masterAnnexC = await resC.json();
 
@@ -622,22 +625,13 @@
             const quarter = document.getElementById('quarterFilter').value;
             const search = (document.getElementById('searchKeyword').value || '').toLowerCase().trim();
 
-            // Filter Annex C with Smart Multi-Date Auto-Detection
+            // Filter Annex C based on Date Filed (Received Date)
             viewAnnexC = masterAnnexC.filter(item => {
                 let matchQ = true;
                 if (quarter !== 'all') {
                     const [targetYr, targetQ] = quarter.split('-Q').map(Number);
                     const info = resolveItemDateInfo(item);
-                    
-                    // Match if Date Filed, Status Check, or Admission belongs to target Quarter/Year
-                    const admDate = new Date(item.date_admission);
-                    const admQ = !isNaN(admDate.getTime()) ? Math.floor(admDate.getMonth() / 3) + 1 : 0;
-                    const admYr = !isNaN(admDate.getTime()) ? admDate.getFullYear() : 0;
-
-                    const matchesFiledOrChecked = (info.year === targetYr && info.quarter === targetQ);
-                    const matchesAdmission = (admYr === targetYr && admQ === targetQ);
-                    
-                    matchQ = matchesFiledOrChecked || matchesAdmission;
+                    matchQ = (info.year === targetYr && info.quarter === targetQ);
                 }
 
                 let matchStatus = true;
@@ -729,7 +723,7 @@
                     <td class="font-mono small">${c.member_pin || '-'}</td>
                     <td class="font-mono small text-muted">${c.date_admission || '-'}</td>
                     <td class="font-mono small text-muted">${c.date_discharge || '-'}</td>
-                    <td class="font-mono small text-muted">${c.date_filed || '-'}</td>
+                    <td class="font-mono small text-muted fw-semibold">${c.date_filed || '-'}</td>
                     <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || 'OPER1'}</span></td>
                     <td class="text-end fw-bold font-mono">${formatPHP(c.claim_amount)}</td>
                     <td class="text-center">${getStatusPill(c.claim_status)}</td>
