@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhilHealth Oplan ER Monitoring Portal - CPH Balamban</title>
-    <!-- Google Fonts: Inter & Outfit -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 Pro Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <!-- SheetJS for 100% exact Excel Export -->
+    <!-- SheetJS with styling & multi-sheet support -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <style>
@@ -29,10 +29,6 @@
             --text-muted: #64748b;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             background: #f1f5f9;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -40,15 +36,9 @@
             min-height: 100vh;
         }
 
-        h1, h2, h3, h4, h5, h6, .brand-font {
-            font-family: 'Outfit', sans-serif;
-        }
+        h1, h2, h3, h4, h5, h6, .brand-font { font-family: 'Outfit', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
 
-        .font-mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Top Executive Navbar */
         .executive-nav {
             background: linear-gradient(135deg, #004329 0%, #006841 50%, #008754 100%);
             box-shadow: 0 4px 20px rgba(0, 77, 48, 0.15);
@@ -67,7 +57,6 @@
             border: 1px solid rgba(255, 255, 255, 0.25);
         }
 
-        /* Modern Glass Cards */
         .glass-card {
             background: #ffffff;
             border: 1px solid var(--card-border);
@@ -116,7 +105,6 @@
             font-size: 20px;
         }
 
-        /* Status Badges */
         .status-pill {
             display: inline-flex;
             align-items: center;
@@ -129,52 +117,24 @@
             letter-spacing: 0.3px;
         }
 
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
 
-        .pill-cheque {
-            background-color: #ecfdf5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
-        }
+        .pill-cheque { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
         .pill-cheque .status-dot { background-color: #10b981; }
 
-        .pill-rth {
-            background-color: #fffbeb;
-            color: #92400e;
-            border: 1px solid #fde68a;
-        }
+        .pill-rth { background-color: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
         .pill-rth .status-dot { background-color: #f59e0b; }
 
-        .pill-denied {
-            background-color: #fff1f2;
-            color: #9f1239;
-            border: 1px solid #fecdd3;
-        }
+        .pill-denied { background-color: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
         .pill-denied .status-dot { background-color: #e11d48; }
 
-        .pill-process {
-            background-color: #f0f9ff;
-            color: #0369a1;
-            border: 1px solid #bae6fd;
-        }
+        .pill-process { background-color: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
         .pill-process .status-dot { background-color: #0ea5e9; }
 
-        .pill-unsubmitted {
-            background-color: #f8fafc;
-            color: #475569;
-            border: 1px solid #e2e8f0;
-        }
+        .pill-unsubmitted { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
         .pill-unsubmitted .status-dot { background-color: #64748b; }
 
-        /* Modern Tabs */
-        .modern-tabs {
-            border-bottom: 2px solid #e2e8f0;
-            gap: 8px;
-        }
+        .modern-tabs { border-bottom: 2px solid #e2e8f0; gap: 8px; }
 
         .modern-tabs .nav-link {
             border: none;
@@ -186,11 +146,6 @@
             position: relative;
             background: transparent;
             transition: all 0.2s ease;
-        }
-
-        .modern-tabs .nav-link:hover {
-            color: var(--primary);
-            background: rgba(0, 122, 77, 0.04);
         }
 
         .modern-tabs .nav-link.active {
@@ -208,13 +163,6 @@
             height: 3px;
             background: var(--primary);
             border-radius: 3px 3px 0 0;
-        }
-
-        /* Beautiful Table */
-        .table-custom {
-            margin-bottom: 0;
-            border-collapse: separate;
-            border-spacing: 0;
         }
 
         .table-custom thead th {
@@ -240,11 +188,8 @@
             vertical-align: middle;
         }
 
-        .table-custom tbody tr:hover td {
-            background-color: #f8fafc;
-        }
+        .table-custom tbody tr:hover td { background-color: #f8fafc; }
 
-        /* Filter Chips */
         .chip-btn {
             border-radius: 20px;
             font-size: 12px;
@@ -298,7 +243,7 @@
                 <div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="fs-5 fw-bold brand-font text-white tracking-wide">PHILHEALTH OPLAN ER PORTAL</span>
-                        <span class="badge bg-warning text-dark font-mono fw-bold" style="font-size: 10px;">BALAMBAN PROV.</span>
+                        <span class="badge bg-warning text-dark font-mono fw-bold" style="font-size: 10px;">CPH BALAMBAN</span>
                     </div>
                     <div class="text-white text-opacity-80 small d-flex align-items-center gap-2" style="font-size: 12px;">
                         <span><i class="fa-solid fa-location-dot me-1 text-warning"></i> CEBU PROVINCIAL HOSPITAL - BALAMBAN</span>
@@ -333,14 +278,13 @@
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-regular fa-calendar"></i></span>
                         <select class="form-select border-start-0 fw-semibold" id="quarterFilter" onchange="filterData()">
-                            <option value="all" selected>All Quarters (All Time)</option>
-                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026)</option>
+                            <option value="all" selected>All Quarters (All Records)</option>
                             <option value="2026-Q2">2nd Quarter 2026 (Apr - Jun 2026)</option>
                             <option value="2026-Q1">1st Quarter 2026 (Jan - Mar 2026)</option>
+                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026)</option>
                             <option value="2026-Q4">4th Quarter 2026 (Oct - Dec 2026)</option>
-                            <option value="2025-Q3">3rd Quarter 2025</option>
                             <option value="2025-Q1">1st Quarter 2025</option>
-                            <option value="2024-Q4">4th Quarter 2024</option>
+                            <option value="2023-Q1">1st Quarter 2023</option>
                         </select>
                     </div>
                 </div>
@@ -349,7 +293,7 @@
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Search Filter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" class="form-control border-start-0" id="searchKeyword" placeholder="Search by Series No, PIN, Patient..." onkeyup="filterData()">
+                        <input type="text" class="form-control border-start-0" id="searchKeyword" placeholder="Search by Series No, PIN, Patient Name..." onkeyup="filterData()">
                     </div>
                 </div>
 
@@ -357,8 +301,8 @@
                     <button class="btn btn-sm btn-outline-success action-btn-pill" onclick="exportActiveTabExcel()">
                         <i class="fa-solid fa-file-excel text-success"></i> Export Current (.xlsx)
                     </button>
-                    <button class="btn btn-sm btn-export-green action-btn-pill" onclick="exportFullAnnexPackage()">
-                        <i class="fa-solid fa-download"></i> Official Annex Package
+                    <button class="btn btn-sm btn-export-green action-btn-pill" onclick="exportFullPrintableAnnexPackage()">
+                        <i class="fa-solid fa-print"></i> Official Printable Package
                     </button>
                 </div>
             </div>
@@ -518,7 +462,7 @@
                             <thead>
                                 <tr>
                                     <th style="width: 40px;">#</th>
-                                    <th>Claim Ref Code</th>
+                                    <th>Claims Code</th>
                                     <th>Patient Name</th>
                                     <th>Member Name</th>
                                     <th>PhilHealth PIN</th>
@@ -545,7 +489,7 @@
                             <div class="text-center mb-4 pb-3 border-bottom">
                                 <h5 class="fw-bold brand-font text-uppercase mb-1">CEBU PROVINCIAL HOSPITAL - BALAMBAN</h5>
                                 <div class="text-muted small">BALIWAGAN, BALAMBAN, CEBU • PMCC NUMBER: 640901</div>
-                                <h6 class="fw-bold text-success mt-2 mb-0 text-uppercase" id="summaryHeaderQuarterTitle">SUMMARY OF ANNEX C (3RD QUARTER - 2026)</h6>
+                                <h6 class="fw-bold text-success mt-2 mb-0 text-uppercase" id="summaryHeaderQuarterTitle">SUMMARY OF ANNEX C (2ND QUARTER - 2026)</h6>
                             </div>
 
                             <div class="table-responsive">
@@ -598,11 +542,12 @@
             return '₱' + (Number(val) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function cleanDisplayString(str) {
-            if (!str || str === 'undefined' || str === 'null') return '-';
-            // If string is purely numbers equal to series number, clean it
-            if (/^[0-9]{12,18}$/.test(str)) return str;
-            return str.replace(/^[0-9]+\s*-\s*/, '').trim() || '-';
+        function formatFullName(last, first, middle) {
+            const l = (last || '').trim();
+            const f = (first || '').trim();
+            const m = (middle || '').trim();
+            if (l && f) return `${l}, ${f} ${m}`.trim();
+            return l || f || '-';
         }
 
         function getStatusPill(status) {
@@ -615,6 +560,8 @@
                 return '<span class="status-pill pill-denied"><span class="status-dot"></span>DENIED</span>';
             } else if (s.includes('PROCESS')) {
                 return '<span class="status-pill pill-process"><span class="status-dot"></span>IN PROCESS</span>';
+            } else if (s.includes('VOUCHER')) {
+                return '<span class="status-pill pill-cheque"><span class="status-dot"></span>WITH VOUCHER</span>';
             }
             return `<span class="status-pill pill-unsubmitted"><span class="status-dot"></span>${s || 'UNSUBMITTED'}</span>`;
         }
@@ -631,17 +578,17 @@
                 };
 
                 // Fetch Annex C
-                const resC = await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?select=*&order=id.desc`, { headers });
+                const resC = await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?select=*&order=id.asc`, { headers });
                 if (!resC.ok) throw new Error(await resC.text());
                 masterAnnexC = await resC.json();
 
                 // Fetch Annex B
-                const resB = await fetch(`${SUPABASE_URL}/rest/v1/annex_b_ibnr?select=*&order=id.desc`, { headers });
+                const resB = await fetch(`${SUPABASE_URL}/rest/v1/annex_b_ibnr?select=*&order=id.asc`, { headers });
                 if (!resB.ok) throw new Error(await resB.text());
                 masterAnnexB = await resB.json();
 
                 ind.className = 'badge bg-success text-white shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono';
-                ind.innerHTML = `<i class="fa-solid fa-circle-check text-white"></i> <span>Live Connected (${masterAnnexC.length} records)</span>`;
+                ind.innerHTML = `<i class="fa-solid fa-circle-check text-white"></i> <span>Live (${masterAnnexC.length} Claims | ${masterAnnexB.length} IBNR)</span>`;
 
                 filterData();
             } catch (err) {
@@ -678,7 +625,7 @@
                 let matchStatus = true;
                 if (selectedStatusChip !== 'ALL') {
                     const st = (item.claim_status || '').toUpperCase();
-                    if (selectedStatusChip === 'WITH CHEQUE') matchStatus = st.includes('CHEQUE') || st.includes('PAID');
+                    if (selectedStatusChip === 'WITH CHEQUE') matchStatus = st.includes('CHEQUE') || st.includes('PAID') || st.includes('VOUCHER');
                     else if (selectedStatusChip === 'RETURN') matchStatus = st.includes('RETURN') || st.includes('RTH');
                     else if (selectedStatusChip === 'DENIED') matchStatus = st.includes('DENIED');
                     else if (selectedStatusChip === 'IN PROCESS') matchStatus = st.includes('PROCESS');
@@ -708,6 +655,7 @@
                 const matchSearch = !search ||
                     (item.claim_code || '').toLowerCase().includes(search) ||
                     (item.patient_surname || '').toLowerCase().includes(search) ||
+                    (item.patient_firstname || '').toLowerCase().includes(search) ||
                     (item.member_pin || '').includes(search);
 
                 return matchQ && matchSearch;
@@ -732,7 +680,7 @@
                 const amt = Number(c.claim_amount) || 0;
                 if (s.includes('RETURN') || s.includes('RTH')) { rthCount++; rthAmt += amt; }
                 else if (s.includes('DENIED')) { deniedCount++; deniedAmt += amt; }
-                else if (s.includes('CHEQUE') || s.includes('PAID')) { chequeCount++; chequeAmt += (Number(c.amount_paid) || amt); }
+                else if (s.includes('CHEQUE') || s.includes('PAID') || s.includes('VOUCHER')) { chequeCount++; chequeAmt += (Number(c.amount_paid) || amt); }
             });
 
             document.getElementById('statIbnrCount').innerText = ibnrCount.toLocaleString();
@@ -757,30 +705,21 @@
                 return;
             }
 
-            tbody.innerHTML = viewAnnexC.map((c, i) => {
-                // Formatting patient name cleanly
-                let patName = `${c.patient_surname || ''} ${c.patient_firstname || ''} ${c.patient_middlename || ''}`.trim();
-                if (!patName || /^[0-9]+$/.test(patName)) patName = `Claim #${c.claim_series_no.slice(-6)}`;
-
-                let memName = `${c.member_surname || ''} ${c.member_firstname || ''} ${c.member_middlename || ''}`.trim();
-                if (!memName || /^[0-9]+$/.test(memName)) memName = patName;
-
-                return `
-                    <tr>
-                        <td class="text-muted small font-mono">${i + 1}</td>
-                        <td class="fw-bold font-mono text-primary">${c.claim_series_no || '-'}</td>
-                        <td class="fw-semibold">${patName}</td>
-                        <td class="text-muted">${memName}</td>
-                        <td class="font-mono small">${c.member_pin || '-'}</td>
-                        <td class="font-mono small text-muted">${c.date_admission || '-'}</td>
-                        <td class="font-mono small text-muted">${c.date_discharge || '-'}</td>
-                        <td class="font-mono small text-muted">${c.date_filed || '-'}</td>
-                        <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || 'OPER1'}</span></td>
-                        <td class="text-end fw-bold font-mono">${formatPHP(c.claim_amount)}</td>
-                        <td class="text-center">${getStatusPill(c.claim_status)}</td>
-                    </tr>
-                `;
-            }).join('');
+            tbody.innerHTML = viewAnnexC.map((c, i) => `
+                <tr>
+                    <td class="text-muted small font-mono">${i + 1}</td>
+                    <td class="fw-bold font-mono text-primary">${c.claim_series_no || '-'}</td>
+                    <td class="fw-semibold">${formatFullName(c.patient_surname, c.patient_firstname, c.patient_middlename)}</td>
+                    <td class="text-muted">${formatFullName(c.member_surname, c.member_firstname, c.member_middlename)}</td>
+                    <td class="font-mono small">${c.member_pin || '-'}</td>
+                    <td class="font-mono small text-muted">${c.date_admission || '-'}</td>
+                    <td class="font-mono small text-muted">${c.date_discharge || '-'}</td>
+                    <td class="font-mono small text-muted">${c.date_filed || '-'}</td>
+                    <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || 'OPER1'}</span></td>
+                    <td class="text-end fw-bold font-mono">${formatPHP(c.claim_amount)}</td>
+                    <td class="text-center">${getStatusPill(c.claim_status)}</td>
+                </tr>
+            `).join('');
         }
 
         function renderAnnexBTable() {
@@ -792,25 +731,20 @@
                 return;
             }
 
-            tbody.innerHTML = viewAnnexB.map((b, i) => {
-                let patName = `${b.patient_surname || ''} ${b.patient_firstname || ''} ${b.patient_middlename || ''}`.trim();
-                let memName = `${b.member_surname || ''} ${b.member_firstname || ''} ${b.member_middlename || ''}`.trim() || patName;
-
-                return `
-                    <tr>
-                        <td class="text-muted small font-mono">${i + 1}</td>
-                        <td class="fw-bold font-mono">${b.claim_code || b.encounter_no || '-'}</td>
-                        <td class="fw-semibold">${patName || '-'}</td>
-                        <td class="text-muted">${memName}</td>
-                        <td class="font-mono small">${b.member_pin || '-'}</td>
-                        <td class="font-mono small text-muted">${b.date_admission || '-'}</td>
-                        <td class="font-mono small text-muted">${b.date_discharge || '-'}</td>
-                        <td><span class="badge bg-light text-dark border font-mono">${b.icd_rvs_code || 'OPER1'}</span></td>
-                        <td class="text-end fw-bold font-mono">${formatPHP(b.claim_amount)}</td>
-                        <td class="text-center">${getStatusPill('UNSUBMITTED')}</td>
-                    </tr>
-                `;
-            }).join('');
+            tbody.innerHTML = viewAnnexB.map((b, i) => `
+                <tr>
+                    <td class="text-muted small font-mono">${i + 1}</td>
+                    <td class="fw-bold font-mono">${b.claim_code || b.encounter_no || '-'}</td>
+                    <td class="fw-semibold">${formatFullName(b.patient_surname, b.patient_firstname, b.patient_middlename)}</td>
+                    <td class="text-muted">${formatFullName(b.member_surname, b.member_firstname, b.member_middlename)}</td>
+                    <td class="font-mono small">${b.member_pin || '-'}</td>
+                    <td class="font-mono small text-muted">${b.date_admission || '-'}</td>
+                    <td class="font-mono small text-muted">${b.date_discharge || '-'}</td>
+                    <td><span class="badge bg-light text-dark border font-mono">${b.icd_rvs_code || 'OPER1'}</span></td>
+                    <td class="text-end fw-bold font-mono">${formatPHP(b.claim_amount)}</td>
+                    <td class="text-center">${getStatusPill('UNSUBMITTED')}</td>
+                </tr>
+            `).join('');
         }
 
         function renderSummaryView() {
@@ -818,8 +752,8 @@
             const quarter = document.getElementById('quarterFilter').value;
             const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
-            let qMonths = [6, 7, 8]; // Q3 Default
-            let qTitle = '3RD QUARTER - 2026';
+            let qMonths = [3, 4, 5]; // Q2 Default (Apr, May, Jun)
+            let qTitle = '2ND QUARTER - 2026';
 
             if (quarter.includes('Q1')) { qMonths = [0, 1, 2]; qTitle = `1ST QUARTER - ${quarter.split('-Q')[0]}`; }
             else if (quarter.includes('Q2')) { qMonths = [3, 4, 5]; qTitle = `2ND QUARTER - ${quarter.split('-Q')[0]}`; }
@@ -866,85 +800,118 @@
             tbody.innerHTML = html;
         }
 
-        // 1-Click Excel Exporters
-        function exportActiveTabExcel() {
+        // =========================================================================
+        // 1-Click Official Printable Excel Exporter with Official CPH Balamban Layout
+        // =========================================================================
+        function exportFullPrintableAnnexPackage() {
             let wb = XLSX.utils.book_new();
-            const activeTab = document.querySelector('#annexTabs .nav-link.active').id;
 
-            if (activeTab === 'tab-c') {
-                const data = viewAnnexC.map((c, i) => ({
-                    'Item No.': i + 1,
-                    'Claim Series Number': c.claim_series_no,
-                    'Patient Name': `${c.patient_surname || ''} ${c.patient_firstname || ''}`.trim() || c.claim_series_no,
-                    'Member Name': `${c.member_surname || ''} ${c.member_firstname || ''}`.trim() || c.claim_series_no,
-                    'PhilHealth PIN': c.member_pin || '',
-                    'Date of Admission': c.date_admission,
-                    'Date of Discharge': c.date_discharge,
-                    'Date Filed': c.date_filed,
-                    'ICD 10 / RVS Code': c.icd_rvs_code,
-                    'Case Rate/Claim Amount': c.claim_amount,
-                    'Claim Status': c.claim_status
-                }));
-                const ws = XLSX.utils.json_to_sheet(data);
-                XLSX.utils.book_append_sheet(wb, ws, "ANNEX C");
-                XLSX.writeFile(wb, `ANNEX_C_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
-            } else if (activeTab === 'tab-b') {
-                const data = viewAnnexB.map((b, i) => ({
-                    'Item No.': i + 1,
-                    'Claims Code': b.claim_code || b.encounter_no,
-                    'Patient Name': `${b.patient_surname || ''} ${b.patient_firstname || ''}`.trim(),
-                    'Member PIN': b.member_pin || '',
-                    'Date of Admission': b.date_admission,
-                    'Date of Discharge': b.date_discharge,
-                    'Claim Amount': b.claim_amount,
-                    'ICD 10 / RVS Code': b.icd_rvs_code,
-                    'Claim Status': 'UNSUBMITTED'
-                }));
-                const ws = XLSX.utils.json_to_sheet(data);
-                XLSX.utils.book_append_sheet(wb, ws, "ANNEX B (IBNR)");
-                XLSX.writeFile(wb, `ANNEX_B_IBNR_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
-            } else {
-                const table = document.getElementById('tableBodySummary').parentElement;
-                const ws = XLSX.utils.table_to_sheet(table);
-                XLSX.utils.book_append_sheet(wb, ws, "Summary of Annex C");
-                XLSX.writeFile(wb, `Summary_Annex_C_${new Date().toISOString().slice(0,10)}.xlsx`);
-            }
+            // 1. BUILD ANNEX C SHEET
+            const headerRowsC = [
+                ['HOSPITAL NAME:  CPH BALAMBAN', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ANNEX C'],
+                ['PMCC NO: 640901'],
+                ['ADDRESS: BALIWAGAN, BALAMBAN, CEBU'],
+                [],
+                ['REPORT OF UNPAID CLAIMS - ACCOUNTS RECEIVABLE'],
+                ['For the Official Reporting Period'],
+                [],
+                ['Item No.', 'YEAR', 'Claim Series Number', 'PATIENT NAME', '', '', 'Member Name', '', '', 'Member PIN', 'Date of Admission (MM/DD/YYYY)', 'Date of Discharge (MM/DD/YYYY)', 'Date Filed (MM/DD/YYYY)', 'Date Refiled (for RTH) (MM/DD/YYYY)', 'ICD 10 / RVS Code', 'Claim Amount', 'Claim Status'],
+                ['', '', '', 'Surname', 'Firstname', 'Middlename', 'Surname', 'Firstname', 'Middlename']
+            ];
+
+            let totalAmtC = 0;
+            const dataRowsC = viewAnnexC.map((c, i) => {
+                totalAmtC += Number(c.claim_amount) || 0;
+                return [
+                    i + 1,
+                    new Date(c.date_filed || c.date_admission).getFullYear() || 2026,
+                    c.claim_series_no,
+                    c.patient_surname || '',
+                    c.patient_firstname || '',
+                    c.patient_middlename || '',
+                    c.member_surname || '',
+                    c.member_firstname || '',
+                    c.member_middlename || '',
+                    c.member_pin || '',
+                    c.date_admission || '',
+                    c.date_discharge || '',
+                    c.date_filed || '',
+                    c.date_refiled || '',
+                    c.icd_rvs_code || 'OPER1',
+                    Number(c.claim_amount) || 0,
+                    c.claim_status || 'IN PROCESS'
+                ];
+            });
+
+            const footerRowsC = [
+                [],
+                ['', '', '', '', '', '', '', '', '', '', 'Total Amount:', '', '', '', '', totalAmtC],
+                [],
+                [],
+                ['', '', 'Prepared by:', '', '', '', 'Certified Complete and Correct by:', '', '', '', 'Approved by:'],
+                [],
+                ['', '', 'PhilHealth Monitoring Officer', '', '', '', 'Chief Accountant', '', '', '', 'Medical Director']
+            ];
+
+            const wsC = XLSX.utils.aoa_to_sheet([...headerRowsC, ...dataRowsC, ...footerRowsC]);
+            XLSX.utils.book_append_sheet(wb, wsC, "ANNEX C 2ND 2026");
+
+            // 2. BUILD ANNEX B (IBNR) SHEET
+            const headerRowsB = [
+                ['HOSPITAL NAME:  CPH BALAMBAN', '', '', '', '', '', '', '', '', '', '', '', '', 'ANNEX B'],
+                ['PMCC NO: 640901'],
+                ['ADDRESS: BALIWAGAN, BALAMBAN, CEBU'],
+                [],
+                ['REPORT OF UNSUBMITTED CLAIMS - IBNR'],
+                ['For the Official Reporting Period'],
+                [],
+                ['Item No.', 'YEAR', 'PATIENT NAME', '', '', 'Member Name', '', '', 'Member PIN', 'Date of Admission (MM/DD/YYYY)', 'Date of Discharge (MM/DD/YYYY)', 'Claim Amount', 'ICD 10 / RVS Code', 'Claim Status'],
+                ['', '', 'Surname', 'Firstname', 'Middlename', 'Surname', 'Firstname', 'Middlename']
+            ];
+
+            let totalAmtB = 0;
+            const dataRowsB = viewAnnexB.map((b, i) => {
+                totalAmtB += Number(b.claim_amount) || 0;
+                return [
+                    i + 1,
+                    new Date(b.date_admission).getFullYear() || 2026,
+                    b.patient_surname || '',
+                    b.patient_firstname || '',
+                    b.patient_middlename || '',
+                    b.member_surname || '',
+                    b.member_firstname || '',
+                    b.member_middlename || '',
+                    b.member_pin || '',
+                    b.date_admission || '',
+                    b.date_discharge || '',
+                    Number(b.claim_amount) || 0,
+                    b.icd_rvs_code || 'OPER1',
+                    'UNSUBMITTED'
+                ];
+            });
+
+            const footerRowsB = [
+                [],
+                ['', '', '', '', '', '', '', '', '', '', 'Total Amount:', totalAmtB],
+                [],
+                [],
+                ['', 'Prepared by:', '', '', '', 'Certified Complete and Correct by:', '', '', '', 'Approved by:'],
+                [],
+                ['', 'PhilHealth Monitoring Officer', '', '', '', 'Chief Accountant', '', '', '', 'Medical Director']
+            ];
+
+            const wsB = XLSX.utils.aoa_to_sheet([...headerRowsB, ...dataRowsB, ...footerRowsB]);
+            XLSX.utils.book_append_sheet(wb, wsB, "ANNEX B 2ND 2026");
+
+            // 3. BUILD SUMMARY OF ANNEX C SHEET
+            const wsSummary = XLSX.utils.table_to_sheet(document.getElementById('tableBodySummary').parentElement);
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Summary of Annex C");
+
+            XLSX.writeFile(wb, `CPH_BALAMBAN_OFFICIAL_PHILHEALTH_PACKAGE_${new Date().toISOString().slice(0,10)}.xlsx`);
         }
 
-        function exportFullAnnexPackage() {
-            let wb = XLSX.utils.book_new();
-
-            // Annex B
-            const dataB = viewAnnexB.map((b, i) => ({
-                'Item No.': i + 1,
-                'Claims Code': b.claim_code || b.encounter_no,
-                'Patient Name': `${b.patient_surname || ''} ${b.patient_firstname || ''}`.trim(),
-                'Member PIN': b.member_pin || '',
-                'Admission Date': b.date_admission,
-                'Discharge Date': b.date_discharge,
-                'Amount': b.claim_amount,
-                'ICD/RVS': b.icd_rvs_code,
-                'Status': 'UNSUBMITTED'
-            }));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataB), "ANNEX B (IBNR)");
-
-            // Annex C
-            const dataC = viewAnnexC.map((c, i) => ({
-                'Item No.': i + 1,
-                'Claim Series Number': c.claim_series_no,
-                'Patient Name': `${c.patient_surname || ''} ${c.patient_firstname || ''}`.trim() || c.claim_series_no,
-                'Member Name': `${c.member_surname || ''} ${c.member_firstname || ''}`.trim() || c.claim_series_no,
-                'Member PIN': c.member_pin || '',
-                'Admission Date': c.date_admission,
-                'Discharge Date': c.date_discharge,
-                'Date Filed': c.date_filed,
-                'ICD/RVS': c.icd_rvs_code,
-                'Claim Amount': c.claim_amount,
-                'Status': c.claim_status
-            }));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataC), "ANNEX C (Submitted)");
-
-            XLSX.writeFile(wb, `CPH_BALAMBAN_PHILHEALTH_ANNEX_PACKAGE_${new Date().toISOString().slice(0,10)}.xlsx`);
+        function exportActiveTabExcel() {
+            exportFullPrintableAnnexPackage();
         }
 
         window.addEventListener('DOMContentLoaded', fetchDashboardData);
