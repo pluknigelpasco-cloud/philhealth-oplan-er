@@ -301,23 +301,28 @@
     <!-- Main Container -->
     <div class="container-fluid px-4 py-4">
 
-        <!-- Top Control / iHOMIS Style Date Range & Search Panel -->
+        <!-- Top Control / Clean Date Filter & Search Panel -->
         <div class="glass-card p-3 mb-4">
             <div class="row g-3 align-items-center">
                 
-                <!-- iHOMIS Style Date Range Picker (Exact Match to iHOMIS+) -->
-                <div class="col-lg-4 col-md-5">
+                <!-- From Date Input -->
+                <div class="col-lg-2 col-md-3 col-sm-6">
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
-                        <i class="fa-solid fa-calendar-days text-success me-1"></i> Date Filter (iHOMIS Date Range)
+                        <i class="fa-regular fa-calendar text-success me-1"></i> From Date
                     </label>
-                    <div class="input-group input-group-sm shadow-sm rounded-2">
-                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-calendar-check text-success"></i></span>
-                        <input type="text" class="form-control border-start-0 fw-semibold text-primary" id="ihomisDateRange" style="cursor: pointer; background: #ffffff;" readonly>
-                    </div>
+                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="startDateInput" value="2026-07-01" onchange="onCustomDateChange()">
+                </div>
+
+                <!-- To Date Input -->
+                <div class="col-lg-2 col-md-3 col-sm-6">
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
+                        <i class="fa-regular fa-calendar-check text-success me-1"></i> To Date
+                    </label>
+                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="endDateInput" value="2026-08-28" onchange="onCustomDateChange()">
                 </div>
 
                 <!-- Search Input -->
-                <div class="col-lg-4 col-md-4">
+                <div class="col-lg-4 col-md-6">
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Search Filter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
@@ -326,7 +331,7 @@
                 </div>
 
                 <!-- Export & Actions -->
-                <div class="col-lg-4 col-md-3 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end flex-wrap">
+                <div class="col-lg-4 col-md-12 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end flex-wrap">
                     <input type="file" id="transmittalFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleDirectFileImport(event)">
                     <button class="btn btn-sm btn-outline-primary action-btn-pill" onclick="document.getElementById('transmittalFileInput').click()">
                         <i class="fa-solid fa-cloud-arrow-up text-primary"></i> Import (.xlsx)
@@ -345,12 +350,12 @@
             <div class="d-flex flex-wrap align-items-center gap-1 mt-3 pt-2 border-top">
                 <span class="text-muted small fw-bold text-uppercase me-2" style="font-size: 10px;">Quick Presets:</span>
                 <button class="chip-btn" onclick="setPresetRange('today')">Today (Aug 28)</button>
-                <button class="chip-btn active" onclick="setPresetRange('this_month')">This Month (August 2026)</button>
-                <button class="chip-btn" onclick="setPresetRange('last_month')">July 2026</button>
-                <button class="chip-btn" onclick="setPresetRange('q3')">3rd Quarter (Jul - Sep 2026)</button>
-                <button class="chip-btn" onclick="setPresetRange('q2')">2nd Quarter (Apr - Jun 2026)</button>
-                <button class="chip-btn" onclick="setPresetRange('q1')">1st Quarter (Jan - Mar 2026)</button>
-                <button class="chip-btn" onclick="setPresetRange('all')">All 2026 Records</button>
+                <button class="chip-btn" onclick="setPresetRange('this_month')">August 2026 (08/01 - 08/28)</button>
+                <button class="chip-btn" onclick="setPresetRange('last_month')">July 2026 (07/01 - 07/31)</button>
+                <button class="chip-btn active" onclick="setPresetRange('jul_aug')">July to August 2026 (07/01 - 08/28)</button>
+                <button class="chip-btn" onclick="setPresetRange('q2')">2nd Quarter (04/01 - 06/30)</button>
+                <button class="chip-btn" onclick="setPresetRange('q1')">1st Quarter (01/01 - 03/31)</button>
+                <button class="chip-btn" onclick="setPresetRange('all')">All Records</button>
             </div>
         </div>
 
@@ -721,48 +726,58 @@
             filterData();
         }
 
+        let filterStartDateStr = '2026-07-01';
+        let filterEndDateStr = '2026-08-28';
+
+        function onCustomDateChange() {
+            filterStartDateStr = document.getElementById('startDateInput').value;
+            filterEndDateStr = document.getElementById('endDateInput').value;
+            document.querySelectorAll('.chip-btn:not(.status-chip)').forEach(b => b.classList.remove('active'));
+            filterData();
+        }
+
         function setPresetRange(type) {
             document.querySelectorAll('.chip-btn:not(.status-chip)').forEach(b => b.classList.remove('active'));
             if (event && event.target) event.target.classList.add('active');
 
             if (type === 'today') {
-                filterStartDate = moment('2026-08-28');
-                filterEndDate = moment('2026-08-28');
+                filterStartDateStr = '2026-08-28';
+                filterEndDateStr = '2026-08-28';
             } else if (type === 'this_month') {
-                filterStartDate = moment('2026-08-01');
-                filterEndDate = moment('2026-08-28');
+                filterStartDateStr = '2026-08-01';
+                filterEndDateStr = '2026-08-28';
             } else if (type === 'last_month') {
-                filterStartDate = moment('2026-07-01');
-                filterEndDate = moment('2026-07-31');
-            } else if (type === 'q3') {
-                filterStartDate = moment('2026-07-01');
-                filterEndDate = moment('2026-08-28');
+                filterStartDateStr = '2026-07-01';
+                filterEndDateStr = '2026-07-31';
+            } else if (type === 'jul_aug') {
+                filterStartDateStr = '2026-07-01';
+                filterEndDateStr = '2026-08-28';
             } else if (type === 'q2') {
-                filterStartDate = moment('2026-04-01');
-                filterEndDate = moment('2026-06-30');
+                filterStartDateStr = '2026-04-01';
+                filterEndDateStr = '2026-06-30';
             } else if (type === 'q1') {
-                filterStartDate = moment('2026-01-01');
-                filterEndDate = moment('2026-03-31');
+                filterStartDateStr = '2026-01-01';
+                filterEndDateStr = '2026-03-31';
             } else if (type === 'all') {
-                filterStartDate = moment('2026-01-01');
-                filterEndDate = moment('2026-08-28');
+                filterStartDateStr = '2020-01-01';
+                filterEndDateStr = '2030-12-31';
             }
 
-            $('#ihomisDateRange').data('daterangepicker').setStartDate(filterStartDate);
-            $('#ihomisDateRange').data('daterangepicker').setEndDate(filterEndDate);
+            document.getElementById('startDateInput').value = filterStartDateStr;
+            document.getElementById('endDateInput').value = filterEndDateStr;
             filterData();
         }
 
         function filterData() {
             const search = (document.getElementById('searchKeyword').value || '').toLowerCase().trim();
-            const startTimestamp = filterStartDate.startOf('day').valueOf();
-            const endTimestamp = filterEndDate.endOf('day').valueOf();
+            const startTimestamp = new Date(filterStartDateStr + 'T00:00:00').getTime();
+            const endTimestamp = new Date(filterEndDateStr + 'T23:59:59').getTime();
 
             viewAnnexC = masterAnnexC.filter(item => {
-                const dateTarget = parseToDate(item.date_filed) || parseToDate(item.date_admission);
+                const d = parseToDate(item.date_filed) || parseToDate(item.date_admission);
                 let matchDate = true;
-                if (dateTarget) {
-                    const t = dateTarget.getTime();
+                if (d) {
+                    const t = d.getTime();
                     matchDate = (t >= startTimestamp && t <= endTimestamp);
                 }
 
@@ -785,10 +800,10 @@
             });
 
             viewAnnexB = masterAnnexB.filter(item => {
-                const dateTarget = parseToDate(item.date_admission) || parseToDate(item.date_discharge);
+                const d = parseToDate(item.date_admission) || parseToDate(item.date_discharge);
                 let matchDate = true;
-                if (dateTarget) {
-                    const t = dateTarget.getTime();
+                if (d) {
+                    const t = d.getTime();
                     matchDate = (t >= startTimestamp && t <= endTimestamp);
                 }
 
