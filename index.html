@@ -279,9 +279,9 @@
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-regular fa-calendar"></i></span>
                         <select class="form-select border-start-0 fw-semibold" id="quarterFilter" onchange="filterData()">
                             <option value="all" selected>All Quarters (All Records)</option>
+                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026 / August)</option>
                             <option value="2026-Q2">2nd Quarter 2026 (Apr - Jun 2026)</option>
                             <option value="2026-Q1">1st Quarter 2026 (Jan - Mar 2026)</option>
-                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026)</option>
                             <option value="2026-Q4">4th Quarter 2026 (Oct - Dec 2026)</option>
                             <option value="2025-Q1">1st Quarter 2025</option>
                             <option value="2023-Q1">1st Quarter 2023</option>
@@ -489,7 +489,7 @@
                             <div class="text-center mb-4 pb-3 border-bottom">
                                 <h5 class="fw-bold brand-font text-uppercase mb-1">CEBU PROVINCIAL HOSPITAL - BALAMBAN</h5>
                                 <div class="text-muted small">BALIWAGAN, BALAMBAN, CEBU • PMCC NUMBER: 640901</div>
-                                <h6 class="fw-bold text-success mt-2 mb-0 text-uppercase" id="summaryHeaderQuarterTitle">SUMMARY OF ANNEX C (2ND QUARTER - 2026)</h6>
+                                <h6 class="fw-bold text-success mt-2 mb-0 text-uppercase" id="summaryHeaderQuarterTitle">SUMMARY OF ANNEX C (ALL RECORDS)</h6>
                             </div>
 
                             <div class="table-responsive">
@@ -752,8 +752,8 @@
             const quarter = document.getElementById('quarterFilter').value;
             const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
-            let qMonths = [3, 4, 5]; // Q2 Default (Apr, May, Jun)
-            let qTitle = '2ND QUARTER - 2026';
+            let qMonths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // All
+            let qTitle = 'ALL RECORDS';
 
             if (quarter.includes('Q1')) { qMonths = [0, 1, 2]; qTitle = `1ST QUARTER - ${quarter.split('-Q')[0]}`; }
             else if (quarter.includes('Q2')) { qMonths = [3, 4, 5]; qTitle = `2ND QUARTER - ${quarter.split('-Q')[0]}`; }
@@ -800,13 +800,9 @@
             tbody.innerHTML = html;
         }
 
-        // =========================================================================
-        // 1-Click Official Printable Excel Exporter with Official CPH Balamban Layout
-        // =========================================================================
         function exportFullPrintableAnnexPackage() {
             let wb = XLSX.utils.book_new();
 
-            // 1. BUILD ANNEX C SHEET
             const headerRowsC = [
                 ['HOSPITAL NAME:  CPH BALAMBAN', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'ANNEX C'],
                 ['PMCC NO: 640901'],
@@ -854,9 +850,8 @@
             ];
 
             const wsC = XLSX.utils.aoa_to_sheet([...headerRowsC, ...dataRowsC, ...footerRowsC]);
-            XLSX.utils.book_append_sheet(wb, wsC, "ANNEX C 2ND 2026");
+            XLSX.utils.book_append_sheet(wb, wsC, "ANNEX C");
 
-            // 2. BUILD ANNEX B (IBNR) SHEET
             const headerRowsB = [
                 ['HOSPITAL NAME:  CPH BALAMBAN', '', '', '', '', '', '', '', '', '', '', '', '', 'ANNEX B'],
                 ['PMCC NO: 640901'],
@@ -901,9 +896,8 @@
             ];
 
             const wsB = XLSX.utils.aoa_to_sheet([...headerRowsB, ...dataRowsB, ...footerRowsB]);
-            XLSX.utils.book_append_sheet(wb, wsB, "ANNEX B 2ND 2026");
+            XLSX.utils.book_append_sheet(wb, wsB, "ANNEX B (IBNR)");
 
-            // 3. BUILD SUMMARY OF ANNEX C SHEET
             const wsSummary = XLSX.utils.table_to_sheet(document.getElementById('tableBodySummary').parentElement);
             XLSX.utils.book_append_sheet(wb, wsSummary, "Summary of Annex C");
 
