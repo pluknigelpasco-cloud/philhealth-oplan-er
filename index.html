@@ -652,7 +652,12 @@
 
         function isCleanPatient(item) {
             const s = ((item.patient_surname || '') + ' ' + (item.patient_firstname || '')).toUpperCase();
-            const bad = ['ATTENDING', 'PHYSICIAN', 'MACHINE', 'USED', 'DELIVERY, ROOM', 'ROOM FEE', 'ER FEE', 'FEE', 'BB.', 'BABY', 'DOCTOR', 'NURSE'];
+            const bad = [
+                'ATTENDING', 'PHYSICIAN', 'SURGEON', 'PROCEDURE', 'EXPANDED', 'PACKAGE',
+                'ANESTHESIOLOGIST', 'PEDIATRICIAN', 'OB-GYNE', 'CARE', 'SERVICE', 'CHARGE',
+                'MACHINE', 'USED', 'DELIVERY, ROOM', 'ROOM FEE', 'ER FEE', 'FEE', 'BB.',
+                'BABY', 'DOCTOR', 'NURSE', 'TOTAL', 'SUMMARY'
+            ];
             for (let b of bad) {
                 if (s.includes(b)) return false;
             }
