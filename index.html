@@ -318,7 +318,6 @@
                 </div>
 
                 <div class="col-lg-6 col-md-5 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end flex-wrap">
-                    <!-- 1-Click Import Transmittal File (.xlsx) -->
                     <input type="file" id="transmittalFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleDirectFileImport(event)">
                     <button class="btn btn-sm btn-outline-primary action-btn-pill" onclick="document.getElementById('transmittalFileInput').click()">
                         <i class="fa-solid fa-cloud-arrow-up text-primary"></i> Import Transmittal File (.xlsx)
@@ -455,9 +454,9 @@
                                     <th>Patient Name</th>
                                     <th>Member Name</th>
                                     <th>PhilHealth PIN</th>
-                                    <th>Admission</th>
-                                    <th>Discharge</th>
-                                    <th>Date Filed (Received)</th>
+                                    <th>Admission Date (MM/DD/YYYY)</th>
+                                    <th>Discharge Date (MM/DD/YYYY)</th>
+                                    <th>Date Filed (Received) (MM/DD/YYYY)</th>
                                     <th>ICD 10 / RVS</th>
                                     <th class="text-end">Claim Amount</th>
                                     <th class="text-center">Status</th>
@@ -492,8 +491,8 @@
                                     <th>Patient Name</th>
                                     <th>Member Name</th>
                                     <th>PhilHealth PIN</th>
-                                    <th>Admission</th>
-                                    <th>Discharge</th>
+                                    <th>Admission Date (MM/DD/YYYY)</th>
+                                    <th>Discharge Date (MM/DD/YYYY)</th>
                                     <th>ICD 10 / RVS</th>
                                     <th class="text-end">Claim Amount</th>
                                     <th class="text-center">Status</th>
@@ -570,6 +569,29 @@
             return '₱' + (Number(val) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
+        // Strict MM/DD/YYYY Date Formatter
+        function formatMMDDYYYY(dateStr) {
+            if (!dateStr || dateStr === '-') return '-';
+            const parts = String(dateStr).split(/[-/]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) {
+                    // YYYY-MM-DD -> MM/DD/YYYY
+                    return `${parts[1].padStart(2, '0')}/${parts[2].padStart(2, '0')}/${parts[0]}`;
+                } else if (parts[2].length === 4) {
+                    // MM-DD-YYYY -> MM/DD/YYYY
+                    return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
+                }
+            }
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const y = d.getFullYear();
+                return `${m}/${day}/${y}`;
+            }
+            return dateStr;
+        }
+
         function formatFullName(last, first, middle) {
             const l = (last || '').trim();
             const f = (first || '').trim();
@@ -606,7 +628,6 @@
             return `<span class="status-pill pill-unsubmitted"><span class="status-dot"></span>${s || 'UNSUBMITTED'}</span>`;
         }
 
-        // Multi-Page Fetcher from Supabase
         async function fetchAllRecordsFromSupabase(tableName, headers) {
             let records = [];
             let offset = 0;
@@ -755,9 +776,9 @@
                     <td class="fw-semibold">${formatFullName(c.patient_surname, c.patient_firstname, c.patient_middlename)}</td>
                     <td class="text-muted">${formatFullName(c.member_surname, c.member_firstname, c.member_middlename)}</td>
                     <td class="font-mono small">${c.member_pin || '-'}</td>
-                    <td class="font-mono small text-muted">${c.date_admission || '-'}</td>
-                    <td class="font-mono small text-muted">${c.date_discharge || '-'}</td>
-                    <td class="font-mono small text-muted fw-semibold">${c.date_filed || '-'}</td>
+                    <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_admission)}</td>
+                    <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_discharge)}</td>
+                    <td class="font-mono small text-muted fw-semibold">${formatMMDDYYYY(c.date_filed)}</td>
                     <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || 'OPER1'}</span></td>
                     <td class="text-end fw-bold font-mono">${formatPHP(c.claim_amount)}</td>
                     <td class="text-center">${getStatusPill(c.claim_status)}</td>
@@ -781,8 +802,8 @@
                     <td class="fw-semibold">${formatFullName(b.patient_surname, b.patient_firstname, b.patient_middlename)}</td>
                     <td class="text-muted">${formatFullName(b.member_surname, b.member_firstname, b.member_middlename)}</td>
                     <td class="font-mono small">${b.member_pin || '-'}</td>
-                    <td class="font-mono small text-muted">${b.date_admission || '-'}</td>
-                    <td class="font-mono small text-muted">${b.date_discharge || '-'}</td>
+                    <td class="font-mono small text-muted">${formatMMDDYYYY(b.date_admission)}</td>
+                    <td class="font-mono small text-muted">${formatMMDDYYYY(b.date_discharge)}</td>
                     <td><span class="badge bg-light text-dark border font-mono">${b.icd_rvs_code || 'OPER1'}</span></td>
                     <td class="text-end fw-bold font-mono">${formatPHP(b.claim_amount)}</td>
                     <td class="text-center">${getStatusPill('UNSUBMITTED')}</td>
@@ -843,7 +864,6 @@
             tbody.innerHTML = html;
         }
 
-        // Direct File Importer (Handles exported iHOMIS Transmittal lists e.g. 1,248 rows in 2 seconds)
         function handleDirectFileImport(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -861,9 +881,7 @@
                         return;
                     }
 
-                    const headers = jsonRows[0].map(h => String(h).trim().toUpperCase());
                     const parsedClaims = [];
-
                     for (let i = 1; i < jsonRows.length; i++) {
                         const r = jsonRows[i];
                         if (!r || r.length < 3) continue;
@@ -953,10 +971,10 @@
                     c.member_firstname || '',
                     c.member_middlename || '',
                     c.member_pin || '',
-                    c.date_admission || '',
-                    c.date_discharge || '',
-                    c.date_filed || '',
-                    c.date_refiled || '',
+                    formatMMDDYYYY(c.date_admission),
+                    formatMMDDYYYY(c.date_discharge),
+                    formatMMDDYYYY(c.date_filed),
+                    formatMMDDYYYY(c.date_refiled),
                     c.icd_rvs_code || 'OPER1',
                     Number(c.claim_amount) || 0,
                     c.claim_status || 'IN PROCESS'
@@ -1001,8 +1019,8 @@
                     b.member_firstname || '',
                     b.member_middlename || '',
                     b.member_pin || '',
-                    b.date_admission || '',
-                    b.date_discharge || '',
+                    formatMMDDYYYY(b.date_admission),
+                    formatMMDDYYYY(b.date_discharge),
                     Number(b.claim_amount) || 0,
                     b.icd_rvs_code || 'OPER1',
                     'UNSUBMITTED'
