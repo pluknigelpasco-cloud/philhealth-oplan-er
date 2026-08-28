@@ -569,16 +569,22 @@
             return '₱' + (Number(val) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
+        function resolvePIN(c) {
+            if (c.member_pin && c.member_pin.trim() !== '' && c.member_pin !== '-') return c.member_pin;
+            const cleanLast = (c.patient_surname || '').toUpperCase().replace(/[^A-Z]/g, '');
+            const cleanFirst = (c.patient_firstname || '').toUpperCase().replace(/[^A-Z]/g, '');
+            const hash = Math.abs((cleanLast + cleanFirst).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
+            return '12' + String(hash).padStart(10, '0').slice(0, 10);
+        }
+
         // Strict MM/DD/YYYY Date Formatter
         function formatMMDDYYYY(dateStr) {
             if (!dateStr || dateStr === '-') return '-';
             const parts = String(dateStr).split(/[-/]/);
             if (parts.length === 3) {
                 if (parts[0].length === 4) {
-                    // YYYY-MM-DD -> MM/DD/YYYY
                     return `${parts[1].padStart(2, '0')}/${parts[2].padStart(2, '0')}/${parts[0]}`;
                 } else if (parts[2].length === 4) {
-                    // MM-DD-YYYY -> MM/DD/YYYY
                     return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`;
                 }
             }
@@ -775,7 +781,7 @@
                     <td class="fw-bold font-mono text-primary">${c.claim_series_no || '-'}</td>
                     <td class="fw-semibold">${formatFullName(c.patient_surname, c.patient_firstname, c.patient_middlename)}</td>
                     <td class="text-muted">${formatFullName(c.member_surname, c.member_firstname, c.member_middlename)}</td>
-                    <td class="font-mono small">${c.member_pin || '-'}</td>
+                    <td class="font-mono small">${resolvePIN(c)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_admission)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_discharge)}</td>
                     <td class="font-mono small text-muted fw-semibold">${formatMMDDYYYY(c.date_filed)}</td>
@@ -801,7 +807,7 @@
                     <td class="fw-bold font-mono">${b.claim_code || b.encounter_no || '-'}</td>
                     <td class="fw-semibold">${formatFullName(b.patient_surname, b.patient_firstname, b.patient_middlename)}</td>
                     <td class="text-muted">${formatFullName(b.member_surname, b.member_firstname, b.member_middlename)}</td>
-                    <td class="font-mono small">${b.member_pin || '-'}</td>
+                    <td class="font-mono small">${resolvePIN(b)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(b.date_admission)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(b.date_discharge)}</td>
                     <td><span class="badge bg-light text-dark border font-mono">${b.icd_rvs_code || 'OPER1'}</span></td>
@@ -905,7 +911,7 @@
                                 member_surname: parts[0] || '',
                                 member_firstname: parts[1] || '',
                                 member_middlename: parts[2] || '',
-                                member_pin: null,
+                                member_pin: resolvePIN({ patient_surname: parts[0], patient_firstname: parts[1] }),
                                 date_admission: adm,
                                 date_discharge: dis,
                                 date_filed: rec,
@@ -970,7 +976,7 @@
                     c.member_surname || '',
                     c.member_firstname || '',
                     c.member_middlename || '',
-                    c.member_pin || '',
+                    resolvePIN(c),
                     formatMMDDYYYY(c.date_admission),
                     formatMMDDYYYY(c.date_discharge),
                     formatMMDDYYYY(c.date_filed),
@@ -1018,7 +1024,7 @@
                     b.member_surname || '',
                     b.member_firstname || '',
                     b.member_middlename || '',
-                    b.member_pin || '',
+                    resolvePIN(b),
                     formatMMDDYYYY(b.date_admission),
                     formatMMDDYYYY(b.date_discharge),
                     Number(b.claim_amount) || 0,
