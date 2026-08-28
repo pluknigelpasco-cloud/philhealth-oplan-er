@@ -273,23 +273,23 @@
         <!-- Top Control / Filter Panel -->
         <div class="glass-card p-3 mb-4">
             <div class="row g-3 align-items-center">
-                <div class="col-lg-3 col-md-4">
-                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Reporting Period / Quarter</label>
+                <div class="col-lg-4 col-md-5">
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Reporting Period / Auto-Quarter Filter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-regular fa-calendar"></i></span>
                         <select class="form-select border-start-0 fw-semibold" id="quarterFilter" onchange="filterData()">
                             <option value="all" selected>All Quarters (All Records)</option>
-                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026 / August)</option>
+                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026 / August Syncs)</option>
                             <option value="2026-Q2">2nd Quarter 2026 (Apr - Jun 2026)</option>
                             <option value="2026-Q1">1st Quarter 2026 (Jan - Mar 2026)</option>
                             <option value="2026-Q4">4th Quarter 2026 (Oct - Dec 2026)</option>
                             <option value="2025-Q1">1st Quarter 2025</option>
-                            <option value="2023-Q1">1st Quarter 2023</option>
+                            <option value="2024-Q4">4th Quarter 2024</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-md-5">
+                <div class="col-lg-4 col-md-4">
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Search Filter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
@@ -297,7 +297,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-5 col-md-3 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end">
+                <div class="col-lg-4 col-md-3 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end">
                     <button class="btn btn-sm btn-outline-success action-btn-pill" onclick="exportActiveTabExcel()">
                         <i class="fa-solid fa-file-excel text-success"></i> Export Current (.xlsx)
                     </button>
@@ -489,7 +489,7 @@
                             <div class="text-center mb-4 pb-3 border-bottom">
                                 <h5 class="fw-bold brand-font text-uppercase mb-1">CEBU PROVINCIAL HOSPITAL - BALAMBAN</h5>
                                 <div class="text-muted small">BALIWAGAN, BALAMBAN, CEBU • PMCC NUMBER: 640901</div>
-                                <h6 class="fw-bold text-success mt-2 mb-0 text-uppercase" id="summaryHeaderQuarterTitle">SUMMARY OF ANNEX C (ALL RECORDS)</h6>
+                                <h6 class="fw-bold text-success mt-2 mb-0 text-uppercase" id="summaryHeaderQuarterTitle">SUMMARY OF ANNEX C (QUARTERLY REPORT)</h6>
                             </div>
 
                             <div class="table-responsive">
@@ -548,6 +548,19 @@
             const m = (middle || '').trim();
             if (l && f) return `${l}, ${f} ${m}`.trim();
             return l || f || '-';
+        }
+
+        // Smart Month & Quarter Resolver (Checks Date Filed, Status Checked Date, Synced Date, or Admission Date)
+        function resolveItemDateInfo(item) {
+            const dateStr = item.date_filed || item.date_status_checked || item.synced_at || item.date_admission;
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) {
+                const yr = d.getFullYear();
+                const month = d.getMonth(); // 0-11
+                const quarter = Math.floor(month / 3) + 1; // 1-4
+                return { year: yr, quarter, month, dateObj: d };
+            }
+            return { year: 2026, quarter: 3, month: 7, dateObj: new Date() };
         }
 
         function getStatusPill(status) {
@@ -609,17 +622,22 @@
             const quarter = document.getElementById('quarterFilter').value;
             const search = (document.getElementById('searchKeyword').value || '').toLowerCase().trim();
 
-            // Filter Annex C
+            // Filter Annex C with Smart Multi-Date Auto-Detection
             viewAnnexC = masterAnnexC.filter(item => {
                 let matchQ = true;
                 if (quarter !== 'all') {
-                    const [yr, q] = quarter.split('-Q');
-                    const d = new Date(item.date_filed || item.date_admission);
-                    if (!isNaN(d)) {
-                        const itemYr = d.getFullYear();
-                        const itemQ = Math.floor(d.getMonth() / 3) + 1;
-                        matchQ = (itemYr === parseInt(yr) && itemQ === parseInt(q));
-                    }
+                    const [targetYr, targetQ] = quarter.split('-Q').map(Number);
+                    const info = resolveItemDateInfo(item);
+                    
+                    // Match if Date Filed, Status Check, or Admission belongs to target Quarter/Year
+                    const admDate = new Date(item.date_admission);
+                    const admQ = !isNaN(admDate.getTime()) ? Math.floor(admDate.getMonth() / 3) + 1 : 0;
+                    const admYr = !isNaN(admDate.getTime()) ? admDate.getFullYear() : 0;
+
+                    const matchesFiledOrChecked = (info.year === targetYr && info.quarter === targetQ);
+                    const matchesAdmission = (admYr === targetYr && admQ === targetQ);
+                    
+                    matchQ = matchesFiledOrChecked || matchesAdmission;
                 }
 
                 let matchStatus = true;
@@ -644,14 +662,11 @@
             viewAnnexB = masterAnnexB.filter(item => {
                 let matchQ = true;
                 if (quarter !== 'all') {
-                    const [yr, q] = quarter.split('-Q');
-                    const d = new Date(item.date_admission);
-                    if (!isNaN(d)) {
-                        const itemYr = d.getFullYear();
-                        const itemQ = Math.floor(d.getMonth() / 3) + 1;
-                        matchQ = (itemYr === parseInt(yr) && itemQ === parseInt(q));
-                    }
+                    const [targetYr, targetQ] = quarter.split('-Q').map(Number);
+                    const info = resolveItemDateInfo(item);
+                    matchQ = (info.year === targetYr && info.quarter === targetQ);
                 }
+
                 const matchSearch = !search ||
                     (item.claim_code || '').toLowerCase().includes(search) ||
                     (item.patient_surname || '').toLowerCase().includes(search) ||
@@ -752,7 +767,7 @@
             const quarter = document.getElementById('quarterFilter').value;
             const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
-            let qMonths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // All
+            let qMonths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
             let qTitle = 'ALL RECORDS';
 
             if (quarter.includes('Q1')) { qMonths = [0, 1, 2]; qTitle = `1ST QUARTER - ${quarter.split('-Q')[0]}`; }
@@ -768,8 +783,8 @@
 
             let html = qMonths.map(mIdx => {
                 const monthClaims = viewAnnexC.filter(c => {
-                    const d = new Date(c.date_filed || c.date_admission);
-                    return !isNaN(d) && d.getMonth() === mIdx;
+                    const info = resolveItemDateInfo(c);
+                    return info.month === mIdx;
                 });
                 const count = monthClaims.length;
                 const amt = monthClaims.reduce((acc, cur) => acc + (Number(cur.claim_amount) || 0), 0);
