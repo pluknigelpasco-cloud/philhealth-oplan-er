@@ -1,0 +1,7 @@
+{
+  "name": "cphb-philhealth-oplan-er",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "serve ."
+  }
+}

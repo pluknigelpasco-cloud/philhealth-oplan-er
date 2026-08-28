@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhilHealth Oplan ER Monitoring Portal - CPH Balamban</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 Pro Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- SheetJS for 100% exact Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #007a4d;
+            --primary-dark: #004d30;
+            --primary-light: #e6f5ef;
+            --accent-yellow: #f59e0b;
+            --accent-blue: #0284c7;
+            --danger-red: #e11d48;
+            --slate-bg: #f8fafc;
+            --card-border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f1f5f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6, .brand-font {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Top Executive Navbar */
+        .executive-nav {
+            background: linear-gradient(135deg, #004329 0%, #006841 50%, #008754 100%);
+            box-shadow: 0 4px 20px rgba(0, 77, 48, 0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hospital-logo-badge {
+            width: 46px;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        /* Modern Glass Cards */
+        .glass-card {
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05), 0 6px 16px -4px rgba(15, 23, 42, 0.04);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .kpi-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            background: #ffffff;
+            border: 1px solid var(--card-border);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+            transition: all 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .kpi-ibnr::before { background: linear-gradient(90deg, #64748b, #94a3b8); }
+        .kpi-rth::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .kpi-denied::before { background: linear-gradient(90deg, #e11d48, #be123c); }
+        .kpi-cheque::before { background: linear-gradient(90deg, #10b981, #059669); }
+
+        .kpi-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Status Badges */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .pill-cheque {
+            background-color: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .pill-cheque .status-dot { background-color: #10b981; }
+
+        .pill-rth {
+            background-color: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        .pill-rth .status-dot { background-color: #f59e0b; }
+
+        .pill-denied {
+            background-color: #fff1f2;
+            color: #9f1239;
+            border: 1px solid #fecdd3;
+        }
+        .pill-denied .status-dot { background-color: #e11d48; }
+
+        .pill-process {
+            background-color: #f0f9ff;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+        }
+        .pill-process .status-dot { background-color: #0ea5e9; }
+
+        .pill-unsubmitted {
+            background-color: #f8fafc;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .pill-unsubmitted .status-dot { background-color: #64748b; }
+
+        /* Modern Tabs */
+        .modern-tabs {
+            border-bottom: 2px solid #e2e8f0;
+            gap: 8px;
+        }
+
+        .modern-tabs .nav-link {
+            border: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 13.5px;
+            padding: 12px 18px;
+            border-radius: 8px 8px 0 0;
+            position: relative;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .modern-tabs .nav-link:hover {
+            color: var(--primary);
+            background: rgba(0, 122, 77, 0.04);
+        }
+
+        .modern-tabs .nav-link.active {
+            color: var(--primary);
+            background: white;
+            font-weight: 700;
+        }
+
+        .modern-tabs .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* Beautiful Table */
+        .table-custom {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table-custom thead th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-custom tbody td {
+            padding: 12px 14px;
+            font-size: 13px;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        .table-custom tbody tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Filter Chips */
+        .chip-btn {
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 14px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            color: #475569;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .chip-btn:hover, .chip-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .action-btn-pill {
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            padding: 8px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-export-green {
+            background: #007a4d;
+            color: white;
+            border: 1px solid #005a36;
+        }
+        .btn-export-green:hover {
+            background: #005a36;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 122, 77, 0.25);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Executive Top Navbar -->
+    <nav class="navbar executive-nav py-3 text-white">
+        <div class="container-fluid px-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="hospital-logo-badge">
+                    <i class="fa-solid fa-hospital-user fs-4 text-warning"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-5 fw-bold brand-font text-white tracking-wide">PHILHEALTH OPLAN ER PORTAL</span>
+                        <span class="badge bg-warning text-dark font-mono fw-bold" style="font-size: 10px;">BALAMBAN PROV.</span>
+                    </div>
+                    <div class="text-white text-opacity-80 small d-flex align-items-center gap-2" style="font-size: 12px;">
+                        <span><i class="fa-solid fa-location-dot me-1 text-warning"></i> CEBU PROVINCIAL HOSPITAL - BALAMBAN</span>
+                        <span>•</span>
+                        <span class="font-mono">PMCC: 640901</span>
+                        <span>•</span>
+                        <span class="font-mono">HOSP CODE: H07020344</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <div id="connectionStatusIndicator" class="badge bg-white text-dark shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono">
+                    <span class="spinner-border spinner-border-sm text-success" role="status"></span>
+                    <span class="fw-semibold">Connecting Supabase...</span>
+                </div>
+                <button class="btn btn-sm btn-outline-light action-btn-pill" onclick="fetchDashboardData()">
+                    <i class="fa-solid fa-rotate-right"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Top Control / Filter Panel -->
+        <div class="glass-card p-3 mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-lg-3 col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Reporting Period / Quarter</label>
+                    <div class="input-group input-group-sm shadow-sm rounded-2">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-regular fa-calendar"></i></span>
+                        <select class="form-select border-start-0 fw-semibold" id="quarterFilter" onchange="filterData()">
+                            <option value="all" selected>All Quarters (All Time)</option>
+                            <option value="2026-Q3">3rd Quarter 2026 (Jul - Sep 2026)</option>
+                            <option value="2026-Q2">2nd Quarter 2026 (Apr - Jun 2026)</option>
+                            <option value="2026-Q1">1st Quarter 2026 (Jan - Mar 2026)</option>
+                            <option value="2026-Q4">4th Quarter 2026 (Oct - Dec 2026)</option>
+                            <option value="2025-Q3">3rd Quarter 2025</option>
+                            <option value="2025-Q1">1st Quarter 2025</option>
+                            <option value="2024-Q4">4th Quarter 2024</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-5">
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Search Filter</label>
+                    <div class="input-group input-group-sm shadow-sm rounded-2">
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" class="form-control border-start-0" id="searchKeyword" placeholder="Search by Series No, PIN, Patient..." onkeyup="filterData()">
+                    </div>
+                </div>
+
+                <div class="col-lg-5 col-md-3 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end">
+                    <button class="btn btn-sm btn-outline-success action-btn-pill" onclick="exportActiveTabExcel()">
+                        <i class="fa-solid fa-file-excel text-success"></i> Export Current (.xlsx)
+                    </button>
+                    <button class="btn btn-sm btn-export-green action-btn-pill" onclick="exportFullAnnexPackage()">
+                        <i class="fa-solid fa-download"></i> Official Annex Package
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4 Executive KPI Cards -->
+        <div class="row g-3 mb-4">
+            <!-- 1. IBNR -->
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-ibnr p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Annex B (IBNR - Unsubmitted)</span>
+                            <h2 class="fw-bold my-1 text-slate-800 font-mono" id="statIbnrCount">0</h2>
+                            <span class="badge bg-light text-muted border font-mono" id="statIbnrAmount">₱0.00 Total</span>
+                        </div>
+                        <div class="kpi-icon-box bg-slate-100 text-secondary">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. RTH / Return -->
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-rth p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">RTH / Return Claims</span>
+                            <h2 class="fw-bold my-1 text-amber-600 font-mono text-warning" id="statRthCount">0</h2>
+                            <span class="badge bg-amber-50 text-warning border border-warning font-mono" id="statRthAmount">₱0.00 Total</span>
+                        </div>
+                        <div class="kpi-icon-box bg-warning bg-opacity-10 text-warning">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Denied -->
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-denied p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">Denied Claims</span>
+                            <h2 class="fw-bold my-1 text-danger font-mono" id="statDeniedCount">0</h2>
+                            <span class="badge bg-rose-50 text-danger border border-danger font-mono" id="statDeniedAmount">₱0.00 Total</span>
+                        </div>
+                        <div class="kpi-icon-box bg-danger bg-opacity-10 text-danger">
+                            <i class="fa-solid fa-ban"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. With Cheque / Paid -->
+            <div class="col-xl-3 col-md-6">
+                <div class="kpi-card kpi-cheque p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="text-muted small fw-bold text-uppercase" style="font-size: 11px;">With Cheque / Disbursed</span>
+                            <h2 class="fw-bold my-1 text-success font-mono" id="statChequeCount">0</h2>
+                            <span class="badge bg-emerald-50 text-success border border-success font-mono" id="statChequeAmount">₱0.00 Paid</span>
+                        </div>
+                        <div class="kpi-icon-box bg-success bg-opacity-10 text-success">
+                            <i class="fa-solid fa-money-check-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Glass Card with Tabs -->
+        <div class="glass-card overflow-hidden">
+            <!-- Navigation Header -->
+            <div class="px-4 pt-3 pb-0 bg-white border-bottom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <ul class="nav modern-tabs" id="annexTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="tab-c" data-bs-toggle="tab" data-bs-target="#pane-c" type="button">
+                                <i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i> Annex C: Transmitted Claims
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="tab-b" data-bs-toggle="tab" data-bs-target="#pane-b" type="button">
+                                <i class="fa-solid fa-clipboard-list me-2 text-secondary"></i> Annex B: Unsubmitted Claims (IBNR)
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="tab-summary" data-bs-toggle="tab" data-bs-target="#pane-summary" type="button">
+                                <i class="fa-solid fa-chart-pie me-2 text-info"></i> Summary of Annex C (Quarterly)
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Quick Status Filter Pills -->
+                    <div class="d-flex gap-1 pb-2">
+                        <button class="chip-btn active" onclick="setStatusChipFilter('ALL', this)">All</button>
+                        <button class="chip-btn" onclick="setStatusChipFilter('WITH CHEQUE', this)">Cheque / Paid</button>
+                        <button class="chip-btn" onclick="setStatusChipFilter('RETURN', this)">RTH</button>
+                        <button class="chip-btn" onclick="setStatusChipFilter('DENIED', this)">Denied</button>
+                        <button class="chip-btn" onclick="setStatusChipFilter('IN PROCESS', this)">In Process</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content Panes -->
+            <div class="tab-content p-0" id="annexTabsContent">
+
+                <!-- PANE 1: ANNEX C -->
+                <div class="tab-pane fade show active" id="pane-c" role="tabpanel">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <span class="small text-muted fw-bold text-uppercase">
+                            <i class="fa-solid fa-database text-success me-1"></i> Live iHOMIS+ Transmittal & Status Tracker
+                        </span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary font-mono" id="badgeAnnexCCount">0 claims</span>
+                    </div>
+                    <div class="table-responsive" style="max-height: 580px;">
+                        <table class="table table-custom table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">#</th>
+                                    <th>Claim Series Number</th>
+                                    <th>Patient Name</th>
+                                    <th>Member Name</th>
+                                    <th>PhilHealth PIN</th>
+                                    <th>Admission</th>
+                                    <th>Discharge</th>
+                                    <th>Date Filed</th>
+                                    <th>ICD 10 / RVS</th>
+                                    <th class="text-end">Claim Amount</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyAnnexC">
+                                <tr>
+                                    <td colspan="11" class="text-center py-5 text-muted">
+                                        <div class="spinner-border spinner-border-sm text-success me-2"></div>
+                                        Connecting to Supabase and loading claims...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PANE 2: ANNEX B (IBNR) -->
+                <div class="tab-pane fade" id="pane-b" role="tabpanel">
+                    <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
+                        <span class="small text-muted fw-bold text-uppercase">
+                            <i class="fa-solid fa-clock text-secondary me-1"></i> Report of Unsubmitted Claims (IBNR)
+                        </span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border font-mono" id="badgeAnnexBCount">0 claims</span>
+                    </div>
+                    <div class="table-responsive" style="max-height: 580px;">
+                        <table class="table table-custom table-hover">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">#</th>
+                                    <th>Claim Ref Code</th>
+                                    <th>Patient Name</th>
+                                    <th>Member Name</th>
+                                    <th>PhilHealth PIN</th>
+                                    <th>Admission</th>
+                                    <th>Discharge</th>
+                                    <th>ICD 10 / RVS</th>
+                                    <th class="text-end">Claim Amount</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyAnnexB">
+                                <tr>
+                                    <td colspan="10" class="text-center py-5 text-muted">No unsubmitted IBNR claims found.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PANE 3: SUMMARY OF ANNEX C -->
+                <div class="tab-pane fade" id="pane-summary" role="tabpanel">
+                    <div class="p-4 bg-white">
+                        <div class="border rounded-3 p-4 bg-slate-50">
+                            <div class="text-center mb-4 pb-3 border-bottom">
+                                <h5 class="fw-bold brand-font text-uppercase mb-1">CEBU PROVINCIAL HOSPITAL - BALAMBAN</h5>
+                                <div class="text-muted small">BALIWAGAN, BALAMBAN, CEBU • PMCC NUMBER: 640901</div>
+                                <h6 class="fw-bold text-success mt-2 mb-0 text-uppercase" id="summaryHeaderQuarterTitle">SUMMARY OF ANNEX C (3RD QUARTER - 2026)</h6>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered bg-white shadow-sm">
+                                    <thead class="table-light">
+                                        <tr class="text-center">
+                                            <th style="width: 25%;" class="text-start">MONTH</th>
+                                            <th style="width: 12%;">NO</th>
+                                            <th style="width: 12%;">YES</th>
+                                            <th style="width: 25%;" class="text-end">CLAIMS COUNT</th>
+                                            <th style="width: 26%;" class="text-end">TOTAL AMOUNT (PHP)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableBodySummary">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">Loading summary matrix...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top text-muted small">
+                                <span>Note: Place an "X" mark on the applicable items. Auto-calculated from Annex C.</span>
+                                <span>Generated: <span class="font-mono" id="summaryGeneratedTimestamp">-</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Supabase Direct REST Data Controller -->
+    <script>
+        const SUPABASE_URL = 'https://iaqxrrxwineayfxnpwjt.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcXhycnh3aW5lYXlmeG5wd2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4ODIxNDYsImV4cCI6MjEwMzQ1ODE0Nn0.JRDagYX2ZK4q0OE3XZBwNK3mN8MyAQjA9QRxJ1y4l_4';
+
+        let masterAnnexB = [];
+        let masterAnnexC = [];
+        let viewAnnexB = [];
+        let viewAnnexC = [];
+        let selectedStatusChip = 'ALL';
+
+        function formatPHP(val) {
+            return '₱' + (Number(val) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function cleanDisplayString(str) {
+            if (!str || str === 'undefined' || str === 'null') return '-';
+            // If string is purely numbers equal to series number, clean it
+            if (/^[0-9]{12,18}$/.test(str)) return str;
+            return str.replace(/^[0-9]+\s*-\s*/, '').trim() || '-';
+        }
+
+        function getStatusPill(status) {
+            const s = (status || '').toUpperCase();
+            if (s.includes('CHEQUE') || s.includes('PAID')) {
+                return '<span class="status-pill pill-cheque"><span class="status-dot"></span>WITH CHEQUE</span>';
+            } else if (s.includes('RETURN') || s.includes('RTH')) {
+                return '<span class="status-pill pill-rth"><span class="status-dot"></span>RETURN / RTH</span>';
+            } else if (s.includes('DENIED')) {
+                return '<span class="status-pill pill-denied"><span class="status-dot"></span>DENIED</span>';
+            } else if (s.includes('PROCESS')) {
+                return '<span class="status-pill pill-process"><span class="status-dot"></span>IN PROCESS</span>';
+            }
+            return `<span class="status-pill pill-unsubmitted"><span class="status-dot"></span>${s || 'UNSUBMITTED'}</span>`;
+        }
+
+        async function fetchDashboardData() {
+            const ind = document.getElementById('connectionStatusIndicator');
+            ind.innerHTML = '<span class="spinner-border spinner-border-sm text-warning me-1"></span> <span>Syncing Supabase...</span>';
+
+            try {
+                const headers = {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Fetch Annex C
+                const resC = await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?select=*&order=id.desc`, { headers });
+                if (!resC.ok) throw new Error(await resC.text());
+                masterAnnexC = await resC.json();
+
+                // Fetch Annex B
+                const resB = await fetch(`${SUPABASE_URL}/rest/v1/annex_b_ibnr?select=*&order=id.desc`, { headers });
+                if (!resB.ok) throw new Error(await resB.text());
+                masterAnnexB = await resB.json();
+
+                ind.className = 'badge bg-success text-white shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono';
+                ind.innerHTML = `<i class="fa-solid fa-circle-check text-white"></i> <span>Live Connected (${masterAnnexC.length} records)</span>`;
+
+                filterData();
+            } catch (err) {
+                console.error('Data loading error:', err);
+                ind.className = 'badge bg-danger text-white shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono';
+                ind.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-white"></i> <span>Connection Error</span>`;
+            }
+        }
+
+        function setStatusChipFilter(status, btnElement) {
+            selectedStatusChip = status;
+            document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+            btnElement.classList.add('active');
+            filterData();
+        }
+
+        function filterData() {
+            const quarter = document.getElementById('quarterFilter').value;
+            const search = (document.getElementById('searchKeyword').value || '').toLowerCase().trim();
+
+            // Filter Annex C
+            viewAnnexC = masterAnnexC.filter(item => {
+                let matchQ = true;
+                if (quarter !== 'all') {
+                    const [yr, q] = quarter.split('-Q');
+                    const d = new Date(item.date_filed || item.date_admission);
+                    if (!isNaN(d)) {
+                        const itemYr = d.getFullYear();
+                        const itemQ = Math.floor(d.getMonth() / 3) + 1;
+                        matchQ = (itemYr === parseInt(yr) && itemQ === parseInt(q));
+                    }
+                }
+
+                let matchStatus = true;
+                if (selectedStatusChip !== 'ALL') {
+                    const st = (item.claim_status || '').toUpperCase();
+                    if (selectedStatusChip === 'WITH CHEQUE') matchStatus = st.includes('CHEQUE') || st.includes('PAID');
+                    else if (selectedStatusChip === 'RETURN') matchStatus = st.includes('RETURN') || st.includes('RTH');
+                    else if (selectedStatusChip === 'DENIED') matchStatus = st.includes('DENIED');
+                    else if (selectedStatusChip === 'IN PROCESS') matchStatus = st.includes('PROCESS');
+                }
+
+                const matchSearch = !search ||
+                    (item.claim_series_no || '').toLowerCase().includes(search) ||
+                    (item.patient_surname || '').toLowerCase().includes(search) ||
+                    (item.patient_firstname || '').toLowerCase().includes(search) ||
+                    (item.member_pin || '').includes(search);
+
+                return matchQ && matchStatus && matchSearch;
+            });
+
+            // Filter Annex B
+            viewAnnexB = masterAnnexB.filter(item => {
+                let matchQ = true;
+                if (quarter !== 'all') {
+                    const [yr, q] = quarter.split('-Q');
+                    const d = new Date(item.date_admission);
+                    if (!isNaN(d)) {
+                        const itemYr = d.getFullYear();
+                        const itemQ = Math.floor(d.getMonth() / 3) + 1;
+                        matchQ = (itemYr === parseInt(yr) && itemQ === parseInt(q));
+                    }
+                }
+                const matchSearch = !search ||
+                    (item.claim_code || '').toLowerCase().includes(search) ||
+                    (item.patient_surname || '').toLowerCase().includes(search) ||
+                    (item.member_pin || '').includes(search);
+
+                return matchQ && matchSearch;
+            });
+
+            renderKPIs();
+            renderAnnexCTable();
+            renderAnnexBTable();
+            renderSummaryView();
+        }
+
+        function renderKPIs() {
+            const ibnrCount = viewAnnexB.length;
+            const ibnrAmt = viewAnnexB.reduce((acc, cur) => acc + (Number(cur.claim_amount) || 0), 0);
+
+            let rthCount = 0, rthAmt = 0;
+            let deniedCount = 0, deniedAmt = 0;
+            let chequeCount = 0, chequeAmt = 0;
+
+            viewAnnexC.forEach(c => {
+                const s = (c.claim_status || '').toUpperCase();
+                const amt = Number(c.claim_amount) || 0;
+                if (s.includes('RETURN') || s.includes('RTH')) { rthCount++; rthAmt += amt; }
+                else if (s.includes('DENIED')) { deniedCount++; deniedAmt += amt; }
+                else if (s.includes('CHEQUE') || s.includes('PAID')) { chequeCount++; chequeAmt += (Number(c.amount_paid) || amt); }
+            });
+
+            document.getElementById('statIbnrCount').innerText = ibnrCount.toLocaleString();
+            document.getElementById('statIbnrAmount').innerText = formatPHP(ibnrAmt);
+
+            document.getElementById('statRthCount').innerText = rthCount.toLocaleString();
+            document.getElementById('statRthAmount').innerText = formatPHP(rthAmt);
+
+            document.getElementById('statDeniedCount').innerText = deniedCount.toLocaleString();
+            document.getElementById('statDeniedAmount').innerText = formatPHP(deniedAmt);
+
+            document.getElementById('statChequeCount').innerText = chequeCount.toLocaleString();
+            document.getElementById('statChequeAmount').innerText = formatPHP(chequeAmt);
+        }
+
+        function renderAnnexCTable() {
+            const tbody = document.getElementById('tableBodyAnnexC');
+            document.getElementById('badgeAnnexCCount').innerText = `${viewAnnexC.length} records`;
+
+            if (viewAnnexC.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted">No claims found matching active filters.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = viewAnnexC.map((c, i) => {
+                // Formatting patient name cleanly
+                let patName = `${c.patient_surname || ''} ${c.patient_firstname || ''} ${c.patient_middlename || ''}`.trim();
+                if (!patName || /^[0-9]+$/.test(patName)) patName = `Claim #${c.claim_series_no.slice(-6)}`;
+
+                let memName = `${c.member_surname || ''} ${c.member_firstname || ''} ${c.member_middlename || ''}`.trim();
+                if (!memName || /^[0-9]+$/.test(memName)) memName = patName;
+
+                return `
+                    <tr>
+                        <td class="text-muted small font-mono">${i + 1}</td>
+                        <td class="fw-bold font-mono text-primary">${c.claim_series_no || '-'}</td>
+                        <td class="fw-semibold">${patName}</td>
+                        <td class="text-muted">${memName}</td>
+                        <td class="font-mono small">${c.member_pin || '-'}</td>
+                        <td class="font-mono small text-muted">${c.date_admission || '-'}</td>
+                        <td class="font-mono small text-muted">${c.date_discharge || '-'}</td>
+                        <td class="font-mono small text-muted">${c.date_filed || '-'}</td>
+                        <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || 'OPER1'}</span></td>
+                        <td class="text-end fw-bold font-mono">${formatPHP(c.claim_amount)}</td>
+                        <td class="text-center">${getStatusPill(c.claim_status)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderAnnexBTable() {
+            const tbody = document.getElementById('tableBodyAnnexB');
+            document.getElementById('badgeAnnexBCount').innerText = `${viewAnnexB.length} records`;
+
+            if (viewAnnexB.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">No unsubmitted IBNR claims found for selected period.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = viewAnnexB.map((b, i) => {
+                let patName = `${b.patient_surname || ''} ${b.patient_firstname || ''} ${b.patient_middlename || ''}`.trim();
+                let memName = `${b.member_surname || ''} ${b.member_firstname || ''} ${b.member_middlename || ''}`.trim() || patName;
+
+                return `
+                    <tr>
+                        <td class="text-muted small font-mono">${i + 1}</td>
+                        <td class="fw-bold font-mono">${b.claim_code || b.encounter_no || '-'}</td>
+                        <td class="fw-semibold">${patName || '-'}</td>
+                        <td class="text-muted">${memName}</td>
+                        <td class="font-mono small">${b.member_pin || '-'}</td>
+                        <td class="font-mono small text-muted">${b.date_admission || '-'}</td>
+                        <td class="font-mono small text-muted">${b.date_discharge || '-'}</td>
+                        <td><span class="badge bg-light text-dark border font-mono">${b.icd_rvs_code || 'OPER1'}</span></td>
+                        <td class="text-end fw-bold font-mono">${formatPHP(b.claim_amount)}</td>
+                        <td class="text-center">${getStatusPill('UNSUBMITTED')}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderSummaryView() {
+            const tbody = document.getElementById('tableBodySummary');
+            const quarter = document.getElementById('quarterFilter').value;
+            const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+
+            let qMonths = [6, 7, 8]; // Q3 Default
+            let qTitle = '3RD QUARTER - 2026';
+
+            if (quarter.includes('Q1')) { qMonths = [0, 1, 2]; qTitle = `1ST QUARTER - ${quarter.split('-Q')[0]}`; }
+            else if (quarter.includes('Q2')) { qMonths = [3, 4, 5]; qTitle = `2ND QUARTER - ${quarter.split('-Q')[0]}`; }
+            else if (quarter.includes('Q3')) { qMonths = [6, 7, 8]; qTitle = `3RD QUARTER - ${quarter.split('-Q')[0]}`; }
+            else if (quarter.includes('Q4')) { qMonths = [9, 10, 11]; qTitle = `4TH QUARTER - ${quarter.split('-Q')[0]}`; }
+
+            document.getElementById('summaryHeaderQuarterTitle').innerText = `SUMMARY OF ANNEX C (${qTitle})`;
+            document.getElementById('summaryGeneratedTimestamp').innerText = new Date().toLocaleString('en-PH');
+
+            let totalClaims = 0;
+            let totalAmount = 0;
+
+            let html = qMonths.map(mIdx => {
+                const monthClaims = viewAnnexC.filter(c => {
+                    const d = new Date(c.date_filed || c.date_admission);
+                    return !isNaN(d) && d.getMonth() === mIdx;
+                });
+                const count = monthClaims.length;
+                const amt = monthClaims.reduce((acc, cur) => acc + (Number(cur.claim_amount) || 0), 0);
+                totalClaims += count;
+                totalAmount += amt;
+
+                return `
+                    <tr>
+                        <td class="fw-bold">${months[mIdx]}</td>
+                        <td class="text-center font-mono fw-bold">${count === 0 ? '<span class="text-danger">X</span>' : ''}</td>
+                        <td class="text-center font-mono fw-bold">${count > 0 ? '<span class="text-success">X</span>' : ''}</td>
+                        <td class="text-end font-mono fw-bold">${count.toLocaleString()}</td>
+                        <td class="text-end font-mono fw-bold">${formatPHP(amt)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            html += `
+                <tr class="table-dark fw-bold">
+                    <td class="text-uppercase">TOTAL</td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-end font-mono">${totalClaims.toLocaleString()}</td>
+                    <td class="text-end font-mono">${formatPHP(totalAmount)}</td>
+                </tr>
+            `;
+
+            tbody.innerHTML = html;
+        }
+
+        // 1-Click Excel Exporters
+        function exportActiveTabExcel() {
+            let wb = XLSX.utils.book_new();
+            const activeTab = document.querySelector('#annexTabs .nav-link.active').id;
+
+            if (activeTab === 'tab-c') {
+                const data = viewAnnexC.map((c, i) => ({
+                    'Item No.': i + 1,
+                    'Claim Series Number': c.claim_series_no,
+                    'Patient Name': `${c.patient_surname || ''} ${c.patient_firstname || ''}`.trim() || c.claim_series_no,
+                    'Member Name': `${c.member_surname || ''} ${c.member_firstname || ''}`.trim() || c.claim_series_no,
+                    'PhilHealth PIN': c.member_pin || '',
+                    'Date of Admission': c.date_admission,
+                    'Date of Discharge': c.date_discharge,
+                    'Date Filed': c.date_filed,
+                    'ICD 10 / RVS Code': c.icd_rvs_code,
+                    'Case Rate/Claim Amount': c.claim_amount,
+                    'Claim Status': c.claim_status
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, "ANNEX C");
+                XLSX.writeFile(wb, `ANNEX_C_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+            } else if (activeTab === 'tab-b') {
+                const data = viewAnnexB.map((b, i) => ({
+                    'Item No.': i + 1,
+                    'Claims Code': b.claim_code || b.encounter_no,
+                    'Patient Name': `${b.patient_surname || ''} ${b.patient_firstname || ''}`.trim(),
+                    'Member PIN': b.member_pin || '',
+                    'Date of Admission': b.date_admission,
+                    'Date of Discharge': b.date_discharge,
+                    'Claim Amount': b.claim_amount,
+                    'ICD 10 / RVS Code': b.icd_rvs_code,
+                    'Claim Status': 'UNSUBMITTED'
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, "ANNEX B (IBNR)");
+                XLSX.writeFile(wb, `ANNEX_B_IBNR_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+            } else {
+                const table = document.getElementById('tableBodySummary').parentElement;
+                const ws = XLSX.utils.table_to_sheet(table);
+                XLSX.utils.book_append_sheet(wb, ws, "Summary of Annex C");
+                XLSX.writeFile(wb, `Summary_Annex_C_${new Date().toISOString().slice(0,10)}.xlsx`);
+            }
+        }
+
+        function exportFullAnnexPackage() {
+            let wb = XLSX.utils.book_new();
+
+            // Annex B
+            const dataB = viewAnnexB.map((b, i) => ({
+                'Item No.': i + 1,
+                'Claims Code': b.claim_code || b.encounter_no,
+                'Patient Name': `${b.patient_surname || ''} ${b.patient_firstname || ''}`.trim(),
+                'Member PIN': b.member_pin || '',
+                'Admission Date': b.date_admission,
+                'Discharge Date': b.date_discharge,
+                'Amount': b.claim_amount,
+                'ICD/RVS': b.icd_rvs_code,
+                'Status': 'UNSUBMITTED'
+            }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataB), "ANNEX B (IBNR)");
+
+            // Annex C
+            const dataC = viewAnnexC.map((c, i) => ({
+                'Item No.': i + 1,
+                'Claim Series Number': c.claim_series_no,
+                'Patient Name': `${c.patient_surname || ''} ${c.patient_firstname || ''}`.trim() || c.claim_series_no,
+                'Member Name': `${c.member_surname || ''} ${c.member_firstname || ''}`.trim() || c.claim_series_no,
+                'Member PIN': c.member_pin || '',
+                'Admission Date': c.date_admission,
+                'Discharge Date': c.date_discharge,
+                'Date Filed': c.date_filed,
+                'ICD/RVS': c.icd_rvs_code,
+                'Claim Amount': c.claim_amount,
+                'Status': c.claim_status
+            }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataC), "ANNEX C (Submitted)");
+
+            XLSX.writeFile(wb, `CPH_BALAMBAN_PHILHEALTH_ANNEX_PACKAGE_${new Date().toISOString().slice(0,10)}.xlsx`);
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchDashboardData);
+    </script>
+</body>
+</html>
