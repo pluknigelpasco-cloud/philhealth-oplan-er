@@ -310,7 +310,7 @@
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
                         <i class="fa-regular fa-calendar text-success me-1"></i> From Date
                     </label>
-                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="startDateInput" value="2026-07-01" onchange="onCustomDateChange()">
+                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="startDateInput" value="2026-07-01">
                 </div>
 
                 <!-- To Date Input -->
@@ -318,15 +318,22 @@
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
                         <i class="fa-regular fa-calendar-check text-success me-1"></i> To Date
                     </label>
-                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="endDateInput" value="2026-08-28" onchange="onCustomDateChange()">
+                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="endDateInput" value="2026-08-28">
+                </div>
+
+                <!-- Filter Button -->
+                <div class="col-lg-1 col-md-2 col-sm-6 d-flex align-items-end">
+                    <button class="btn btn-sm btn-success w-100 fw-bold shadow-sm" onclick="onCustomDateChange()" style="height: 31px; border-radius: 6px;" title="Apply Date Filter">
+                        <i class="fa-solid fa-filter me-1"></i> Filter
+                    </button>
                 </div>
 
                 <!-- Search Input -->
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-3 col-md-4 col-sm-6">
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Search Filter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" class="form-control border-start-0" id="searchKeyword" placeholder="Search by Series No, PIN, Patient Name..." onkeyup="filterData()">
+                        <input type="text" class="form-control border-start-0" id="searchKeyword" placeholder="Search by Series No, PIN, Patient..." onkeyup="filterData()">
                     </div>
                 </div>
 
@@ -684,7 +691,7 @@
                 'ATTENDING', 'PHYSICIAN', 'SURGEON', 'PROCEDURE', 'EXPANDED', 'PACKAGE',
                 'ANESTHESIOLOGIST', 'PEDIATRICIAN', 'OB-GYNE', 'CARE', 'SERVICE', 'CHARGE',
                 'MACHINE', 'USED', 'DELIVERY, ROOM', 'ROOM FEE', 'ER FEE', 'FEE', 'BB.',
-                'BABY', 'DOCTOR', 'NURSE', 'TOTAL', 'SUMMARY'
+                'BABY', 'DOCTOR', 'NURSE', 'TOTAL', 'SUMMARY', 'DR.', 'DR,', 'DR '
             ];
             for (let b of bad) {
                 if (s.includes(b)) return false;
