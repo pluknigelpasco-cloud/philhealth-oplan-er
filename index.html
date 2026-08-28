@@ -600,6 +600,23 @@
             return `<span class="status-pill pill-unsubmitted"><span class="status-dot"></span>${s || 'UNSUBMITTED'}</span>`;
         }
 
+        // Unlimited Multi-Page Fetcher from Supabase
+        async function fetchAllRecordsFromSupabase(tableName, headers) {
+            let records = [];
+            let offset = 0;
+            const limit = 1000;
+            while (true) {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/${tableName}?select=*&order=id.desc&limit=${limit}&offset=${offset}`, { headers });
+                if (!res.ok) break;
+                const batch = await res.json();
+                if (!Array.isArray(batch) || batch.length === 0) break;
+                records.push(...batch);
+                if (batch.length < limit) break;
+                offset += limit;
+            }
+            return records;
+        }
+
         async function fetchDashboardData(silent = false) {
             const ind = document.getElementById('connText');
             if (!silent) ind.innerText = 'Syncing Supabase...';
@@ -611,17 +628,16 @@
                     'Content-Type': 'application/json'
                 };
 
-                // Fetch Annex C
-                const resC = await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?select=*&order=id.desc`, { headers });
-                if (!resC.ok) throw new Error(await resC.text());
-                masterAnnexC = await resC.json();
+                // Fetch All Annex C & Annex B without 1,000 limit
+                const [cData, bData] = await Promise.all([
+                    fetchAllRecordsFromSupabase('annex_c_claims', headers),
+                    fetchAllRecordsFromSupabase('annex_b_ibnr', headers)
+                ]);
 
-                // Fetch Annex B
-                const resB = await fetch(`${SUPABASE_URL}/rest/v1/annex_b_ibnr?select=*&order=id.asc`, { headers });
-                if (!resB.ok) throw new Error(await resB.text());
-                masterAnnexB = await resB.json();
+                masterAnnexC = cData;
+                masterAnnexB = bData;
 
-                ind.innerText = `Live (${masterAnnexC.length} Claims | ${masterAnnexB.length} IBNR)`;
+                ind.innerText = `Live (${masterAnnexC.length.toLocaleString()} Claims | ${masterAnnexB.length.toLocaleString()} IBNR)`;
                 filterData();
             } catch (err) {
                 console.error('Data loading error:', err);
@@ -930,10 +946,8 @@
             exportFullPrintableAnnexPackage();
         }
 
-        // Auto-refresh every 8 seconds in background
         setInterval(() => fetchDashboardData(true), 8000);
 
-        // Supabase Realtime Listener
         if (supabaseClient) {
             supabaseClient
                 .channel('public:annex_c_claims')
