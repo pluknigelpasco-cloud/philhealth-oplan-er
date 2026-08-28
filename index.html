@@ -650,6 +650,15 @@
             return records;
         }
 
+        function isCleanPatient(item) {
+            const s = ((item.patient_surname || '') + ' ' + (item.patient_firstname || '')).toUpperCase();
+            const bad = ['ATTENDING', 'PHYSICIAN', 'MACHINE', 'USED', 'DELIVERY, ROOM', 'ROOM FEE', 'ER FEE', 'FEE', 'BB.', 'BABY', 'DOCTOR', 'NURSE'];
+            for (let b of bad) {
+                if (s.includes(b)) return false;
+            }
+            return true;
+        }
+
         async function fetchDashboardData(silent = false) {
             const ind = document.getElementById('connText');
             if (!silent) ind.innerText = 'Syncing Supabase...';
@@ -666,8 +675,8 @@
                     fetchAllRecordsFromSupabase('annex_b_ibnr', headers)
                 ]);
 
-                masterAnnexC = cData;
-                masterAnnexB = bData;
+                masterAnnexC = (cData || []).filter(isCleanPatient);
+                masterAnnexB = (bData || []).filter(isCleanPatient);
 
                 ind.innerText = `Live (${masterAnnexC.length.toLocaleString()} Claims | ${masterAnnexB.length.toLocaleString()} IBNR)`;
                 filterData();
