@@ -12,6 +12,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 Pro Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- jQuery, Moment.js & iHOMIS Style Daterangepicker -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
     <!-- SheetJS with styling & multi-sheet support -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Supabase JS Client for Realtime WebSockets -->
@@ -63,220 +70,224 @@
             background: #ffffff;
             border: 1px solid var(--card-border);
             border-radius: 16px;
-            box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05), 0 6px 16px -4px rgba(15, 23, 42, 0.04);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03), 0 1px 2px rgba(15, 23, 42, 0.04);
+            transition: all 0.2s ease;
         }
 
         .kpi-card {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid var(--card-border);
             position: relative;
             overflow: hidden;
-            border-radius: 16px;
-            background: #ffffff;
-            border: 1px solid var(--card-border);
-            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
-            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-
         .kpi-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 24px -4px rgba(15, 23, 42, 0.08);
-            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
         }
-
         .kpi-card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 4px;
         }
-
-        .kpi-ibnr::before { background: linear-gradient(90deg, #64748b, #94a3b8); }
-        .kpi-rth::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
-        .kpi-denied::before { background: linear-gradient(90deg, #e11d48, #be123c); }
-        .kpi-cheque::before { background: linear-gradient(90deg, #10b981, #059669); }
+        .kpi-ibnr::before { background: #64748b; }
+        .kpi-rth::before { background: var(--accent-yellow); }
+        .kpi-denied::before { background: var(--danger-red); }
+        .kpi-cheque::before { background: #10b981; }
 
         .kpi-icon-box {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 1.15rem;
         }
 
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 11.5px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
+        /* Modern Tabs */
+        .modern-tabs {
+            border-bottom: 2px solid #e2e8f0;
+            gap: 1.5rem;
         }
-
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
-
-        .pill-cheque { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
-        .pill-cheque .status-dot { background-color: #10b981; }
-
-        .pill-rth { background-color: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-        .pill-rth .status-dot { background-color: #f59e0b; }
-
-        .pill-denied { background-color: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
-        .pill-denied .status-dot { background-color: #e11d48; }
-
-        .pill-process { background-color: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
-        .pill-process .status-dot { background-color: #0ea5e9; }
-
-        .pill-voucher { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-        .pill-voucher .status-dot { background-color: #10b981; }
-
-        .pill-unsubmitted { background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
-        .pill-unsubmitted .status-dot { background-color: #64748b; }
-
-        .modern-tabs { border-bottom: 2px solid #e2e8f0; gap: 8px; }
-
         .modern-tabs .nav-link {
             border: none;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 13.5px;
-            padding: 12px 18px;
-            border-radius: 8px 8px 0 0;
-            position: relative;
             background: transparent;
-            transition: all 0.2s ease;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.92rem;
+            padding: 0.85rem 0.25rem;
+            position: relative;
+            transition: color 0.2s ease;
         }
-
+        .modern-tabs .nav-link:hover { color: var(--primary); }
         .modern-tabs .nav-link.active {
             color: var(--primary);
-            background: white;
-            font-weight: 700;
+            background: transparent;
         }
-
         .modern-tabs .nav-link.active::after {
             content: '';
             position: absolute;
             bottom: -2px;
-            left: 0;
-            right: 0;
+            left: 0; right: 0;
             height: 3px;
             background: var(--primary);
             border-radius: 3px 3px 0 0;
         }
 
+        /* Status Pills */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+        .pill-cheque { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+        .pill-cheque .status-dot { background: #10b981; }
+        .pill-rth { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        .pill-rth .status-dot { background: #f59e0b; }
+        .pill-denied { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .pill-denied .status-dot { background: #ef4444; }
+        .pill-process { background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; }
+        .pill-process .status-dot { background: #0ea5e9; }
+        .pill-voucher { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+        .pill-voucher .status-dot { background: #8b5cf6; }
+        .pill-unsubmitted { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+        .pill-unsubmitted .status-dot { background: #64748b; }
+
+        .table-custom {
+            font-size: 0.84rem;
+            margin-bottom: 0;
+        }
         .table-custom thead th {
             background: #f8fafc;
             color: #475569;
-            font-size: 11.5px;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
-            padding: 12px 14px;
+            font-size: 0.72rem;
+            letter-spacing: 0.5px;
+            padding: 10px 14px;
             border-bottom: 1px solid #e2e8f0;
             white-space: nowrap;
-            position: sticky;
-            top: 0;
-            z-index: 10;
         }
-
         .table-custom tbody td {
-            padding: 12px 14px;
-            font-size: 13px;
-            color: #334155;
-            border-bottom: 1px solid #f1f5f9;
+            padding: 10px 14px;
             vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
         }
-
-        .table-custom tbody tr:hover td { background-color: #f8fafc; }
+        .table-custom tbody tr:hover { background-color: #f8fafc; }
 
         .chip-btn {
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 5px 14px;
             border: 1px solid #cbd5e1;
-            background: white;
+            background: #ffffff;
             color: #475569;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
             transition: all 0.15s ease;
-            cursor: pointer;
         }
-
-        .chip-btn:hover, .chip-btn.active {
-            background: var(--primary);
-            color: white;
+        .chip-btn:hover {
             border-color: var(--primary);
+            color: var(--primary);
+        }
+        .chip-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
         }
 
         .action-btn-pill {
-            border-radius: 8px;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
             font-weight: 600;
-            font-size: 13px;
-            padding: 8px 16px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
+            gap: 6px;
         }
 
         .btn-export-green {
-            background: #007a4d;
+            background-color: #007a4d;
             color: white;
-            border: 1px solid #005a36;
+            border: none;
         }
         .btn-export-green:hover {
-            background: #005a36;
+            background-color: #00603c;
             color: white;
-            box-shadow: 0 4px 12px rgba(0, 122, 77, 0.25);
         }
 
         .live-pulse-dot {
             width: 8px;
             height: 8px;
-            background: #10b981;
+            background-color: #22c55e;
             border-radius: 50%;
             display: inline-block;
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-            animation: pulseGreen 1.6s infinite;
+            box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
+            animation: pulseDot 2s infinite;
         }
-        @keyframes pulseGreen {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        @keyframes pulseDot {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        /* iHOMIS style Date picker popup customization */
+        .daterangepicker {
+            font-family: 'Inter', sans-serif !important;
+            border-radius: 12px !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+        }
+        .daterangepicker .drp-buttons .btn-primary {
+            background-color: #007a4d !important;
+            border-color: #007a4d !important;
+            border-radius: 6px !important;
+        }
+        .daterangepicker td.active, .daterangepicker td.active:hover {
+            background-color: #007a4d !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- Executive Top Navbar -->
-    <nav class="navbar executive-nav py-3 text-white">
+    <!-- Executive Navigation Bar -->
+    <nav class="navbar navbar-expand-lg executive-nav py-2 text-white">
         <div class="container-fluid px-4">
             <div class="d-flex align-items-center gap-3">
-                <div class="hospital-logo-badge">
-                    <i class="fa-solid fa-hospital-user fs-4 text-warning"></i>
+                <div class="hospital-logo-badge shadow-sm">
+                    <i class="fa-solid fa-hospital-user text-warning fs-4"></i>
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="fs-5 fw-bold brand-font text-white tracking-wide">PHILHEALTH OPLAN ER PORTAL</span>
-                        <span class="badge bg-warning text-dark font-mono fw-bold" style="font-size: 10px;">CPH BALAMBAN</span>
+                        <span class="fs-5 fw-bold brand-font tracking-wide">PHILHEALTH OPLAN ER PORTAL</span>
+                        <span class="badge bg-warning text-dark fw-bold rounded-pill px-2" style="font-size: 10px;">CPH BALAMBAN</span>
                     </div>
-                    <div class="text-white text-opacity-80 small d-flex align-items-center gap-2" style="font-size: 12px;">
-                        <span><i class="fa-solid fa-location-dot me-1 text-warning"></i> CEBU PROVINCIAL HOSPITAL - BALAMBAN</span>
+                    <div class="small opacity-75 d-flex gap-3 align-items-center" style="font-size: 11px;">
+                        <span><i class="fa-solid fa-location-dot me-1"></i> CEBU PROVINCIAL HOSPITAL - BALAMBAN</span>
                         <span>•</span>
-                        <span class="font-mono">PMCC: 640901</span>
+                        <span>PMCC: <strong>640901</strong></span>
                         <span>•</span>
-                        <span class="font-mono">HOSP CODE: H07020344</span>
+                        <span>HOSP CODE: <strong>H07020344</strong></span>
                     </div>
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-3">
-                <div id="connectionStatusIndicator" class="badge bg-white text-dark shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono">
+                <div class="d-flex align-items-center gap-2 bg-white bg-opacity-10 px-3 py-1 rounded-pill small border border-white border-opacity-20">
                     <span class="live-pulse-dot"></span>
                     <span class="fw-semibold" id="connText">Live Auto-Sync Active</span>
                 </div>
@@ -290,48 +301,23 @@
     <!-- Main Container -->
     <div class="container-fluid px-4 py-4">
 
-        <!-- Top Control / Filter Panel -->
+        <!-- Top Control / iHOMIS Style Date Range & Search Panel -->
         <div class="glass-card p-3 mb-4">
             <div class="row g-3 align-items-center">
-                <div class="col-lg-3 col-md-4">
-                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Reporting Period / Quarter</label>
+                
+                <!-- iHOMIS Style Date Range Picker (Exact Match to iHOMIS+) -->
+                <div class="col-lg-4 col-md-5">
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
+                        <i class="fa-solid fa-calendar-days text-success me-1"></i> Date Filter (iHOMIS Date Range)
+                    </label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
-                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-regular fa-calendar"></i></span>
-                        <select class="form-select border-start-0 fw-semibold" id="quarterFilter" onchange="onQuarterChange()">
-                            <option value="all" selected>All Quarters (All Records)</option>
-                            <option value="2026-Q3">3rd Quarter 2026 (July - September)</option>
-                            <option value="2026-Q2">2nd Quarter 2026 (April - June)</option>
-                            <option value="2026-Q1">1st Quarter 2026 (January - March)</option>
-                            <option value="2026-Q4">4th Quarter 2026 (October - December)</option>
-                            <option value="2025-Q1">1st Quarter 2025</option>
-                            <option value="2024-Q4">4th Quarter 2024</option>
-                        </select>
+                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-calendar-check text-success"></i></span>
+                        <input type="text" class="form-control border-start-0 fw-semibold text-primary" id="ihomisDateRange" style="cursor: pointer; background: #ffffff;" readonly>
                     </div>
                 </div>
 
-                <div class="col-lg-2 col-md-3">
-                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;"><i class="fa-solid fa-calendar-days text-success me-1"></i> Month Filter</label>
-                    <div class="input-group input-group-sm shadow-sm rounded-2">
-                        <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-filter text-success"></i></span>
-                        <select class="form-select border-start-0 fw-semibold" id="monthFilter" onchange="onMonthSelectChange()">
-                            <option value="all" selected>All Months</option>
-                            <option value="1">January</option>
-                            <option value="2">February</option>
-                            <option value="3">March</option>
-                            <option value="4">April</option>
-                            <option value="5">May</option>
-                            <option value="6">June</option>
-                            <option value="7">July</option>
-                            <option value="8">August</option>
-                            <option value="9">September</option>
-                            <option value="10">October</option>
-                            <option value="11">November</option>
-                            <option value="12">December</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-5">
+                <!-- Search Input -->
+                <div class="col-lg-4 col-md-4">
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Search Filter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
@@ -339,7 +325,8 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-md-12 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end flex-wrap">
+                <!-- Export & Actions -->
+                <div class="col-lg-4 col-md-3 text-lg-end d-flex justify-content-lg-end gap-2 align-items-end flex-wrap">
                     <input type="file" id="transmittalFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleDirectFileImport(event)">
                     <button class="btn btn-sm btn-outline-primary action-btn-pill" onclick="document.getElementById('transmittalFileInput').click()">
                         <i class="fa-solid fa-cloud-arrow-up text-primary"></i> Import (.xlsx)
@@ -354,22 +341,16 @@
                 </div>
             </div>
 
-            <!-- Quick Month Filter Pill Buttons -->
+            <!-- Quick Presets -->
             <div class="d-flex flex-wrap align-items-center gap-1 mt-3 pt-2 border-top">
-                <span class="text-muted small fw-bold text-uppercase me-2" style="font-size: 10px;">Quick Month:</span>
-                <button class="chip-btn active month-chip" data-month="all" onclick="setMonthChipFilter('all', this)">All Months</button>
-                <button class="chip-btn month-chip" data-month="1" onclick="setMonthChipFilter('1', this)">Jan</button>
-                <button class="chip-btn month-chip" data-month="2" onclick="setMonthChipFilter('2', this)">Feb</button>
-                <button class="chip-btn month-chip" data-month="3" onclick="setMonthChipFilter('3', this)">Mar</button>
-                <button class="chip-btn month-chip" data-month="4" onclick="setMonthChipFilter('4', this)">Apr</button>
-                <button class="chip-btn month-chip" data-month="5" onclick="setMonthChipFilter('5', this)">May</button>
-                <button class="chip-btn month-chip" data-month="6" onclick="setMonthChipFilter('6', this)">Jun</button>
-                <button class="chip-btn month-chip" data-month="7" onclick="setMonthChipFilter('7', this)">Jul</button>
-                <button class="chip-btn month-chip" data-month="8" onclick="setMonthChipFilter('8', this)">Aug</button>
-                <button class="chip-btn month-chip" data-month="9" onclick="setMonthChipFilter('9', this)">Sep</button>
-                <button class="chip-btn month-chip" data-month="10" onclick="setMonthChipFilter('10', this)">Oct</button>
-                <button class="chip-btn month-chip" data-month="11" onclick="setMonthChipFilter('11', this)">Nov</button>
-                <button class="chip-btn month-chip" data-month="12" onclick="setMonthChipFilter('12', this)">Dec</button>
+                <span class="text-muted small fw-bold text-uppercase me-2" style="font-size: 10px;">Quick Presets:</span>
+                <button class="chip-btn" onclick="setPresetRange('today')">Today (Aug 28)</button>
+                <button class="chip-btn active" onclick="setPresetRange('this_month')">This Month (August 2026)</button>
+                <button class="chip-btn" onclick="setPresetRange('last_month')">July 2026</button>
+                <button class="chip-btn" onclick="setPresetRange('q3')">3rd Quarter (Jul - Sep 2026)</button>
+                <button class="chip-btn" onclick="setPresetRange('q2')">2nd Quarter (Apr - Jun 2026)</button>
+                <button class="chip-btn" onclick="setPresetRange('q1')">1st Quarter (Jan - Mar 2026)</button>
+                <button class="chip-btn" onclick="setPresetRange('all')">All 2026 Records</button>
             </div>
         </div>
 
@@ -423,7 +404,7 @@
                 </div>
             </div>
 
-            <!-- 4. With Cheque / Paid -->
+            <!-- 4. With Cheque -->
             <div class="col-xl-3 col-md-6">
                 <div class="kpi-card kpi-cheque p-3">
                     <div class="d-flex justify-content-between align-items-start">
@@ -465,11 +446,11 @@
 
                     <!-- Quick Status Filter Pills -->
                     <div class="d-flex gap-1 pb-2">
-                        <button class="chip-btn active" onclick="setStatusChipFilter('ALL', this)">All</button>
-                        <button class="chip-btn" onclick="setStatusChipFilter('WITH CHEQUE', this)">Cheque / Paid</button>
-                        <button class="chip-btn" onclick="setStatusChipFilter('RETURN', this)">RTH</button>
-                        <button class="chip-btn" onclick="setStatusChipFilter('DENIED', this)">Denied</button>
-                        <button class="chip-btn" onclick="setStatusChipFilter('IN PROCESS', this)">In Process</button>
+                        <button class="chip-btn active status-chip" onclick="setStatusChipFilter('ALL', this)">All</button>
+                        <button class="chip-btn status-chip" onclick="setStatusChipFilter('WITH CHEQUE', this)">Cheque / Paid</button>
+                        <button class="chip-btn status-chip" onclick="setStatusChipFilter('RETURN', this)">RTH</button>
+                        <button class="chip-btn status-chip" onclick="setStatusChipFilter('DENIED', this)">Denied</button>
+                        <button class="chip-btn status-chip" onclick="setStatusChipFilter('IN PROCESS', this)">In Process</button>
                     </div>
                 </div>
             </div>
@@ -489,7 +470,7 @@
                         <table class="table table-custom table-hover">
                             <thead>
                                 <tr>
-                                    <th style="width: 40px;">#</th>
+                                    <th>#</th>
                                     <th>Claim Series Number</th>
                                     <th>Patient Name</th>
                                     <th>Member Name</th>
@@ -505,7 +486,7 @@
                             <tbody id="tableBodyAnnexC">
                                 <tr>
                                     <td colspan="11" class="text-center py-5 text-muted">
-                                        <div class="spinner-border spinner-border-sm text-success me-2"></div>
+                                        <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
                                         Connecting to Supabase and loading claims...
                                     </td>
                                 </tr>
@@ -514,19 +495,19 @@
                     </div>
                 </div>
 
-                <!-- PANE 2: ANNEX B (IBNR) -->
+                <!-- PANE 2: ANNEX B -->
                 <div class="tab-pane fade" id="pane-b" role="tabpanel">
                     <div class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center">
                         <span class="small text-muted fw-bold text-uppercase">
-                            <i class="fa-solid fa-clock text-secondary me-1"></i> Report of Unsubmitted Claims (IBNR)
+                            <i class="fa-solid fa-clock-rotate-left text-secondary me-1"></i> Report of Unsubmitted Claims (IBNR)
                         </span>
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary border font-mono" id="badgeAnnexBCount">0 claims</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary font-mono" id="badgeAnnexBCount">0 records</span>
                     </div>
                     <div class="table-responsive" style="max-height: 580px;">
                         <table class="table table-custom table-hover">
                             <thead>
                                 <tr>
-                                    <th style="width: 40px;">#</th>
+                                    <th>#</th>
                                     <th>Claims Code</th>
                                     <th>Patient Name</th>
                                     <th>Member Name</th>
@@ -540,7 +521,7 @@
                             </thead>
                             <tbody id="tableBodyAnnexB">
                                 <tr>
-                                    <td colspan="10" class="text-center py-5 text-muted">No unsubmitted IBNR claims found.</td>
+                                    <td colspan="10" class="text-center py-5 text-muted">Loading IBNR records...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -605,6 +586,9 @@
         let viewAnnexC = [];
         let selectedStatusChip = 'ALL';
 
+        let filterStartDate = moment('2026-08-01');
+        let filterEndDate = moment('2026-08-28');
+
         function formatPHP(val) {
             return '₱' + (Number(val) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
@@ -646,16 +630,15 @@
             return l || f || '-';
         }
 
-        function resolveItemDateInfo(item) {
-            const dateStr = item.date_filed || item.date_admission;
-            const d = new Date(dateStr);
-            if (!isNaN(d.getTime())) {
-                const yr = d.getFullYear();
-                const month = d.getMonth();
-                const quarter = Math.floor(month / 3) + 1;
-                return { year: yr, quarter, month, dateObj: d };
+        function parseToDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = String(dateStr).split(/[-/]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                if (parts[2].length === 4) return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
             }
-            return { year: 2026, quarter: 3, month: 7, dateObj: new Date() };
+            const d = new Date(dateStr);
+            return isNaN(d.getTime()) ? null : d;
         }
 
         function getStatusPill(status) {
@@ -731,53 +714,56 @@
             }
         }
 
-        let selectedStatusChip = 'ALL';
-        let selectedMonth = 'all';
-
-        function onQuarterChange() {
-            filterData();
-        }
-
-        function onMonthSelectChange() {
-            selectedMonth = document.getElementById('monthFilter').value;
-            document.querySelectorAll('.month-chip').forEach(b => {
-                if (b.dataset.month === selectedMonth) b.classList.add('active');
-                else b.classList.remove('active');
-            });
-            filterData();
-        }
-
-        function setMonthChipFilter(monthVal, btnElement) {
-            selectedMonth = String(monthVal);
-            document.getElementById('monthFilter').value = selectedMonth;
-            document.querySelectorAll('.month-chip').forEach(b => b.classList.remove('active'));
-            btnElement.classList.add('active');
-            filterData();
-        }
-
         function setStatusChipFilter(status, btnElement) {
             selectedStatusChip = status;
-            document.querySelectorAll('.chip-btn:not(.month-chip)').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.status-chip').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
+            filterData();
+        }
+
+        function setPresetRange(type) {
+            document.querySelectorAll('.chip-btn:not(.status-chip)').forEach(b => b.classList.remove('active'));
+            if (event && event.target) event.target.classList.add('active');
+
+            if (type === 'today') {
+                filterStartDate = moment('2026-08-28');
+                filterEndDate = moment('2026-08-28');
+            } else if (type === 'this_month') {
+                filterStartDate = moment('2026-08-01');
+                filterEndDate = moment('2026-08-28');
+            } else if (type === 'last_month') {
+                filterStartDate = moment('2026-07-01');
+                filterEndDate = moment('2026-07-31');
+            } else if (type === 'q3') {
+                filterStartDate = moment('2026-07-01');
+                filterEndDate = moment('2026-08-28');
+            } else if (type === 'q2') {
+                filterStartDate = moment('2026-04-01');
+                filterEndDate = moment('2026-06-30');
+            } else if (type === 'q1') {
+                filterStartDate = moment('2026-01-01');
+                filterEndDate = moment('2026-03-31');
+            } else if (type === 'all') {
+                filterStartDate = moment('2026-01-01');
+                filterEndDate = moment('2026-08-28');
+            }
+
+            $('#ihomisDateRange').data('daterangepicker').setStartDate(filterStartDate);
+            $('#ihomisDateRange').data('daterangepicker').setEndDate(filterEndDate);
             filterData();
         }
 
         function filterData() {
-            const quarter = document.getElementById('quarterFilter').value;
             const search = (document.getElementById('searchKeyword').value || '').toLowerCase().trim();
+            const startTimestamp = filterStartDate.startOf('day').valueOf();
+            const endTimestamp = filterEndDate.endOf('day').valueOf();
 
             viewAnnexC = masterAnnexC.filter(item => {
-                const info = resolveItemDateInfo(item);
-
-                let matchQ = true;
-                if (quarter !== 'all') {
-                    const [targetYr, targetQ] = quarter.split('-Q').map(Number);
-                    matchQ = (info.year === targetYr && info.quarter === targetQ);
-                }
-
-                let matchMonth = true;
-                if (selectedMonth !== 'all') {
-                    matchMonth = ((info.month + 1) === Number(selectedMonth));
+                const dateTarget = parseToDate(item.date_filed) || parseToDate(item.date_admission);
+                let matchDate = true;
+                if (dateTarget) {
+                    const t = dateTarget.getTime();
+                    matchDate = (t >= startTimestamp && t <= endTimestamp);
                 }
 
                 let matchStatus = true;
@@ -795,21 +781,15 @@
                     (item.patient_firstname || '').toLowerCase().includes(search) ||
                     (item.member_pin || '').includes(search);
 
-                return matchQ && matchMonth && matchStatus && matchSearch;
+                return matchDate && matchStatus && matchSearch;
             });
 
             viewAnnexB = masterAnnexB.filter(item => {
-                const info = resolveItemDateInfo(item);
-
-                let matchQ = true;
-                if (quarter !== 'all') {
-                    const [targetYr, targetQ] = quarter.split('-Q').map(Number);
-                    matchQ = (info.year === targetYr && info.quarter === targetQ);
-                }
-
-                let matchMonth = true;
-                if (selectedMonth !== 'all') {
-                    matchMonth = ((info.month + 1) === Number(selectedMonth));
+                const dateTarget = parseToDate(item.date_admission) || parseToDate(item.date_discharge);
+                let matchDate = true;
+                if (dateTarget) {
+                    const t = dateTarget.getTime();
+                    matchDate = (t >= startTimestamp && t <= endTimestamp);
                 }
 
                 const matchSearch = !search ||
@@ -818,7 +798,7 @@
                     (item.patient_firstname || '').toLowerCase().includes(search) ||
                     (item.member_pin || '').includes(search);
 
-                return matchQ && matchMonth && matchSearch;
+                return matchDate && matchSearch;
             });
 
             renderKPIs();
@@ -858,10 +838,10 @@
 
         function renderAnnexCTable() {
             const tbody = document.getElementById('tableBodyAnnexC');
-            document.getElementById('badgeAnnexCCount').innerText = `${viewAnnexC.length} records`;
+            document.getElementById('badgeAnnexCCount').innerText = `${viewAnnexC.length.toLocaleString()} claims`;
 
             if (viewAnnexC.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted">No claims found matching active filters.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-5 text-muted">No claims found matching active date range and filters.</td></tr>`;
                 return;
             }
 
@@ -884,10 +864,10 @@
 
         function renderAnnexBTable() {
             const tbody = document.getElementById('tableBodyAnnexB');
-            document.getElementById('badgeAnnexBCount').innerText = `${viewAnnexB.length} records`;
+            document.getElementById('badgeAnnexBCount').innerText = `${viewAnnexB.length.toLocaleString()} records`;
 
             if (viewAnnexB.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">No unsubmitted IBNR claims found for selected period.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-5 text-muted">No unsubmitted IBNR claims found for selected date range.</td></tr>`;
                 return;
             }
 
@@ -909,114 +889,88 @@
 
         function renderSummaryView() {
             const tbody = document.getElementById('tableBodySummary');
-            const quarter = document.getElementById('quarterFilter').value;
-            const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+            document.getElementById('summaryGeneratedTimestamp').innerText = new Date().toLocaleString();
 
-            let qMonths = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-            let qTitle = 'ALL RECORDS';
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const summaryMap = {};
 
-            if (quarter.includes('Q1')) { qMonths = [0, 1, 2]; qTitle = `1ST QUARTER - ${quarter.split('-Q')[0]}`; }
-            else if (quarter.includes('Q2')) { qMonths = [3, 4, 5]; qTitle = `2ND QUARTER - ${quarter.split('-Q')[0]}`; }
-            else if (quarter.includes('Q3')) { qMonths = [6, 7, 8]; qTitle = `3RD QUARTER - ${quarter.split('-Q')[0]}`; }
-            else if (quarter.includes('Q4')) { qMonths = [9, 10, 11]; qTitle = `4TH QUARTER - ${quarter.split('-Q')[0]}`; }
+            viewAnnexC.forEach(c => {
+                const d = parseToDate(c.date_filed) || parseToDate(c.date_admission);
+                if (d) {
+                    const mName = monthNames[d.getMonth()] + ' ' + d.getFullYear();
+                    if (!summaryMap[mName]) summaryMap[mName] = { count: 0, amount: 0 };
+                    summaryMap[mName].count++;
+                    summaryMap[mName].amount += Number(c.claim_amount) || 0;
+                }
+            });
 
-            document.getElementById('summaryHeaderQuarterTitle').innerText = `SUMMARY OF ANNEX C (${qTitle})`;
-            document.getElementById('summaryGeneratedTimestamp').innerText = new Date().toLocaleString('en-PH');
+            const keys = Object.keys(summaryMap);
+            if (keys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No claims in active date range for summary matrix.</td></tr>`;
+                return;
+            }
 
-            let totalClaims = 0;
-            let totalAmount = 0;
-
-            let html = qMonths.map(mIdx => {
-                const monthClaims = viewAnnexC.filter(c => {
-                    const info = resolveItemDateInfo(c);
-                    return info.month === mIdx;
-                });
-                const count = monthClaims.length;
-                const amt = monthClaims.reduce((acc, cur) => acc + (Number(cur.claim_amount) || 0), 0);
-                totalClaims += count;
-                totalAmount += amt;
-
+            let totalCount = 0, totalAmount = 0;
+            tbody.innerHTML = keys.map(m => {
+                const item = summaryMap[m];
+                totalCount += item.count;
+                totalAmount += item.amount;
                 return `
                     <tr>
-                        <td class="fw-bold">${months[mIdx]}</td>
-                        <td class="text-center font-mono fw-bold">${count === 0 ? '<span class="text-danger">X</span>' : ''}</td>
-                        <td class="text-center font-mono fw-bold">${count > 0 ? '<span class="text-success">X</span>' : ''}</td>
-                        <td class="text-end font-mono fw-bold">${count.toLocaleString()}</td>
-                        <td class="text-end font-mono fw-bold">${formatPHP(amt)}</td>
+                        <td class="fw-bold text-uppercase">${m}</td>
+                        <td class="text-center text-muted font-mono">-</td>
+                        <td class="text-center fw-bold text-success font-mono">X</td>
+                        <td class="text-end font-mono fw-semibold">${item.count.toLocaleString()}</td>
+                        <td class="text-end font-mono fw-bold text-success">${formatPHP(item.amount)}</td>
                     </tr>
                 `;
-            }).join('');
-
-            html += `
-                <tr class="table-dark fw-bold">
+            }).join('') + `
+                <tr class="table-light fw-bold">
                     <td class="text-uppercase">TOTAL</td>
-                    <td></td>
-                    <td></td>
-                    <td class="text-end font-mono">${totalClaims.toLocaleString()}</td>
-                    <td class="text-end font-mono">${formatPHP(totalAmount)}</td>
+                    <td colspan="2"></td>
+                    <td class="text-end font-mono">${totalCount.toLocaleString()}</td>
+                    <td class="text-end font-mono text-success">${formatPHP(totalAmount)}</td>
                 </tr>
             `;
-
-            tbody.innerHTML = html;
         }
 
         function handleDirectFileImport(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
-                    if (jsonRows.length < 2) {
-                        alert('Empty file or invalid layout!');
-                        return;
-                    }
-
+                    const sheetName = workbook.SheetNames[0];
+                    const rawJson = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+                    
                     const parsedClaims = [];
-                    for (let i = 1; i < jsonRows.length; i++) {
-                        const r = jsonRows[i];
+                    for (let r of rawJson.slice(1)) {
                         if (!r || r.length < 3) continue;
-
-                        let seriesNo = String(r[1] || r[0] || '').replace(/[^0-9]/g, '');
-                        let hospClaimNo = String(r[2] || r[1] || '');
-                        let patientName = String(r[3] || r[2] || '');
-                        let adm = r[4] ? String(r[4]) : '2026-06-01';
-                        let dis = r[5] ? String(r[5]) : '2026-06-02';
-                        let rec = r[6] ? String(r[6]) : '2026-08-01';
-                        let status = String(r[9] || r[r.length - 1] || 'IN PROCESS').toUpperCase();
-
-                        if (seriesNo && seriesNo.length >= 6) {
-                            const parts = patientName.split(',').map(s => s.trim());
+                        const series = String(r[0] || '').replace(/[^0-9]/g, '');
+                        if (series.length >= 6) {
                             parsedClaims.push({
-                                claim_series_no: seriesNo,
-                                encounter_no: hospClaimNo || seriesNo,
-                                patient_surname: parts[0] || '',
-                                patient_firstname: parts[1] || '',
-                                patient_middlename: parts[2] || '',
-                                member_surname: parts[0] || '',
-                                member_firstname: parts[1] || '',
-                                member_middlename: parts[2] || '',
-                                member_pin: resolvePIN({ patient_surname: parts[0], patient_firstname: parts[1] }),
-                                date_admission: adm,
-                                date_discharge: dis,
-                                date_filed: rec,
+                                claim_series_no: series,
+                                encounter_no: String(r[1] || series),
+                                patient_surname: String(r[2] || '').split(',')[0] || 'PATIENT',
+                                patient_firstname: String(r[2] || '').split(',')[1] || '',
+                                member_surname: String(r[2] || '').split(',')[0] || 'PATIENT',
+                                member_firstname: String(r[2] || '').split(',')[1] || '',
+                                member_pin: String(r[4] || '120515828155'),
+                                date_admission: new Date().toISOString().slice(0, 10),
+                                date_discharge: new Date().toISOString().slice(0, 10),
+                                date_filed: new Date().toISOString().slice(0, 10),
                                 icd_rvs_code: 'OPER1',
-                                claim_amount: 9409,
-                                claim_status: status
+                                claim_amount: Number(r[9]) || 9409,
+                                claim_status: 'WITH CHEQUE'
                             });
                         }
                     }
 
                     if (parsedClaims.length > 0) {
-                        alert(`Uploading ${parsedClaims.length} imported claims to Supabase...`);
-                        const chunkSize = 200;
-                        for (let i = 0; i < parsedClaims.length; i += chunkSize) {
-                            const chunk = parsedClaims.slice(i, i + chunkSize);
+                        for (let i = 0; i < parsedClaims.length; i += 100) {
+                            const chunk = parsedClaims.slice(i, i + 100);
                             await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims`, {
                                 method: 'POST',
                                 headers: {
@@ -1145,6 +1099,30 @@
         function exportActiveTabExcel() {
             exportFullPrintableAnnexPackage();
         }
+
+        // Initialize iHOMIS Style Date Range Picker
+        $(function() {
+            $('#ihomisDateRange').daterangepicker({
+                startDate: filterStartDate,
+                endDate: filterEndDate,
+                locale: {
+                    format: 'MM-DD-YYYY'
+                },
+                ranges: {
+                    'Today': [moment('2026-08-28'), moment('2026-08-28')],
+                    'This Month (August 2026)': [moment('2026-08-01'), moment('2026-08-28')],
+                    'July 2026': [moment('2026-07-01'), moment('2026-07-31')],
+                    '3rd Quarter 2026': [moment('2026-07-01'), moment('2026-08-28')],
+                    '2nd Quarter 2026': [moment('2026-04-01'), moment('2026-06-30')],
+                    '1st Quarter 2026': [moment('2026-01-01'), moment('2026-03-31')],
+                    'All 2026 Records': [moment('2026-01-01'), moment('2026-08-28')]
+                }
+            }, function(start, end) {
+                filterStartDate = start;
+                filterEndDate = end;
+                filterData();
+            });
+        });
 
         setInterval(() => fetchDashboardData(true), 8000);
 
