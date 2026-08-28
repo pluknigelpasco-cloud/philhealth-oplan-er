@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- SheetJS with styling & multi-sheet support -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Supabase JS Client for Realtime WebSockets -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
@@ -232,6 +234,21 @@
             color: white;
             box-shadow: 0 4px 12px rgba(0, 122, 77, 0.25);
         }
+
+        .live-pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulseGreen 1.6s infinite;
+        }
+        @keyframes pulseGreen {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
     </style>
 </head>
 <body>
@@ -260,8 +277,8 @@
 
             <div class="d-flex align-items-center gap-3">
                 <div id="connectionStatusIndicator" class="badge bg-white text-dark shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono">
-                    <span class="spinner-border spinner-border-sm text-success" role="status"></span>
-                    <span class="fw-semibold">Connecting Supabase...</span>
+                    <span class="live-pulse-dot"></span>
+                    <span class="fw-semibold" id="connText">Live Auto-Sync Active</span>
                 </div>
                 <button class="btn btn-sm btn-outline-light action-btn-pill" onclick="fetchDashboardData()">
                     <i class="fa-solid fa-rotate-right"></i> Refresh
@@ -530,10 +547,12 @@
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Supabase Direct REST Data Controller -->
+    <!-- Supabase Direct REST & Realtime Data Controller -->
     <script>
         const SUPABASE_URL = 'https://iaqxrrxwineayfxnpwjt.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlhcXhycnh3aW5lYXlmeG5wd2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4ODIxNDYsImV4cCI6MjEwMzQ1ODE0Nn0.JRDagYX2ZK4q0OE3XZBwNK3mN8MyAQjA9QRxJ1y4l_4';
+
+        const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
         let masterAnnexB = [];
         let masterAnnexC = [];
@@ -553,14 +572,13 @@
             return l || f || '-';
         }
 
-        // Exact Date Resolver: Date Filed (Received Date) determines Quarter & Month
         function resolveItemDateInfo(item) {
             const dateStr = item.date_filed || item.date_admission;
             const d = new Date(dateStr);
             if (!isNaN(d.getTime())) {
                 const yr = d.getFullYear();
-                const month = d.getMonth(); // 0-11
-                const quarter = Math.floor(month / 3) + 1; // 1-4
+                const month = d.getMonth();
+                const quarter = Math.floor(month / 3) + 1;
                 return { year: yr, quarter, month, dateObj: d };
             }
             return { year: 2026, quarter: 3, month: 7, dateObj: new Date() };
@@ -582,9 +600,9 @@
             return `<span class="status-pill pill-unsubmitted"><span class="status-dot"></span>${s || 'UNSUBMITTED'}</span>`;
         }
 
-        async function fetchDashboardData() {
-            const ind = document.getElementById('connectionStatusIndicator');
-            ind.innerHTML = '<span class="spinner-border spinner-border-sm text-warning me-1"></span> <span>Syncing Supabase...</span>';
+        async function fetchDashboardData(silent = false) {
+            const ind = document.getElementById('connText');
+            if (!silent) ind.innerText = 'Syncing Supabase...';
 
             try {
                 const headers = {
@@ -603,14 +621,11 @@
                 if (!resB.ok) throw new Error(await resB.text());
                 masterAnnexB = await resB.json();
 
-                ind.className = 'badge bg-success text-white shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono';
-                ind.innerHTML = `<i class="fa-solid fa-circle-check text-white"></i> <span>Live (${masterAnnexC.length} Claims | ${masterAnnexB.length} IBNR)</span>`;
-
+                ind.innerText = `Live (${masterAnnexC.length} Claims | ${masterAnnexB.length} IBNR)`;
                 filterData();
             } catch (err) {
                 console.error('Data loading error:', err);
-                ind.className = 'badge bg-danger text-white shadow-sm py-2 px-3 d-flex align-items-center gap-2 rounded-pill font-mono';
-                ind.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-white"></i> <span>Connection Error</span>`;
+                ind.innerText = 'Connection Error';
             }
         }
 
@@ -625,7 +640,6 @@
             const quarter = document.getElementById('quarterFilter').value;
             const search = (document.getElementById('searchKeyword').value || '').toLowerCase().trim();
 
-            // Filter Annex C based on Date Filed (Received Date)
             viewAnnexC = masterAnnexC.filter(item => {
                 let matchQ = true;
                 if (quarter !== 'all') {
@@ -652,7 +666,6 @@
                 return matchQ && matchStatus && matchSearch;
             });
 
-            // Filter Annex B
             viewAnnexB = masterAnnexB.filter(item => {
                 let matchQ = true;
                 if (quarter !== 'all') {
@@ -917,7 +930,20 @@
             exportFullPrintableAnnexPackage();
         }
 
-        window.addEventListener('DOMContentLoaded', fetchDashboardData);
+        // Auto-refresh every 8 seconds in background
+        setInterval(() => fetchDashboardData(true), 8000);
+
+        // Supabase Realtime Listener
+        if (supabaseClient) {
+            supabaseClient
+                .channel('public:annex_c_claims')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'annex_c_claims' }, () => {
+                    fetchDashboardData(true);
+                })
+                .subscribe();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => fetchDashboardData(false));
     </script>
 </body>
 </html>
