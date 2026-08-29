@@ -1237,8 +1237,12 @@
                         });
                     }
 
-                    // 1. Instantly update in-memory masterAnnexC so UI reflects the imported data in 0 milliseconds!
+                    // 1. Instantly update in-memory masterAnnexC and purge from masterAnnexB so UI reflects in 0ms!
+                    const transmittedCodes = new Set();
                     for (let c of parsedClaims) {
+                        if (c.encounter_no) transmittedCodes.add(String(c.encounter_no));
+                        if (c.claim_series_no) transmittedCodes.add(String(c.claim_series_no));
+
                         const existing = masterAnnexC.find(m => m.claim_series_no === c.claim_series_no || (m.encounter_no && m.encounter_no === c.encounter_no));
                         if (existing) {
                             if (c.icd_rvs_code) existing.icd_rvs_code = c.icd_rvs_code;
@@ -1252,6 +1256,9 @@
                             masterAnnexC.unshift(c);
                         }
                     }
+
+                    // Remove any imported transmitted claim from IBNR table view
+                    masterAnnexB = masterAnnexB.filter(b => !transmittedCodes.has(String(b.encounter_no)) && !transmittedCodes.has(String(b.claim_code)));
                     filterData(); // Instant local render!
 
                     // 2. Persist updates to Supabase (using direct PATCH for existing rows & POST for new ones)
@@ -1274,6 +1281,19 @@
                             })
                         });
                     });
+
+                    // 3. Auto-delete transmitted encounters from annex_b_ibnr table in database
+                    for (let c of parsedClaims) {
+                        if (c.encounter_no) {
+                            fetch(`${SUPABASE_URL}/rest/v1/annex_b_ibnr?encounter_no=eq.${c.encounter_no}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'apikey': SUPABASE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                                }
+                            });
+                        }
+                    }
 
                     await Promise.all(patchPromises);
 
