@@ -868,6 +868,10 @@
             });
 
             viewAnnexB = masterAnnexB.filter(item => {
+                // Strictly exclude IBNR claims without finalized amounts
+                const amt = Number(item.claim_amount);
+                if (!amt || isNaN(amt) || amt <= 0) return false;
+
                 const d = parseToDate(item.date_admission) || parseToDate(item.date_discharge);
                 let matchDate = true;
                 if (hasDateFilter) {
