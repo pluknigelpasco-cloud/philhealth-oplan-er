@@ -1030,6 +1030,41 @@
             'ADMISSION', 'DISCHARGE', 'PARTICULARS', 'HOSPITAL', 'DR.', 'DR,', 'DR '
         ];
 
+        function parseExactDate(dateStr) {
+            if (!dateStr) return null;
+            const clean = String(dateStr).trim().split(' ')[0];
+            const parts = clean.split(/[-/]/);
+            if (parts.length === 3) {
+                if (parts[2].length === 4) {
+                    return `${parts[2]}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                } else if (parts[0].length === 4) {
+                    return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                }
+            }
+            const d = new Date(dateStr);
+            if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+            return null;
+        }
+
+        function parseName(fullName) {
+            if (!fullName) return { last: '', first: '', middle: '' };
+            const clean = String(fullName).replace(/\s+/g, ' ').trim();
+            if (clean.includes(',')) {
+                const parts = clean.split(',').map(s => s.trim()).filter(Boolean);
+                if (parts.length >= 3) return { last: parts[0], first: parts[1], middle: parts[2] };
+                if (parts.length === 2) return { last: parts[0], first: parts[1], middle: '' };
+            }
+            const spaceParts = clean.split(' ').filter(Boolean);
+            if (spaceParts.length === 3) {
+                return { last: spaceParts[2], first: spaceParts[0], middle: spaceParts[1] };
+            } else if (spaceParts.length === 2) {
+                return { last: spaceParts[1], first: spaceParts[0], middle: '' };
+            } else if (spaceParts.length > 3) {
+                return { last: spaceParts[spaceParts.length - 1], first: spaceParts.slice(0, spaceParts.length - 2).join(' '), middle: spaceParts[spaceParts.length - 2] };
+            }
+            return { last: clean, first: '', middle: '' };
+        }
+
         function isGenuinePatientName(name) {
             if (!name || typeof name !== 'string') return false;
             const clean = name.trim().toUpperCase();
