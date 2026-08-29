@@ -310,7 +310,7 @@
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
                         <i class="fa-regular fa-calendar text-success me-1"></i> From Date
                     </label>
-                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="startDateInput" value="2026-07-01">
+                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="startDateInput" value="">
                 </div>
 
                 <!-- To Date Input -->
@@ -318,22 +318,25 @@
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
                         <i class="fa-regular fa-calendar-check text-success me-1"></i> To Date
                     </label>
-                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="endDateInput" value="2026-08-28">
+                    <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="endDateInput" value="">
                 </div>
 
-                <!-- Filter Button -->
-                <div class="col-lg-1 col-md-2 col-sm-6 d-flex align-items-end">
-                    <button class="btn btn-sm btn-success w-100 fw-bold shadow-sm" onclick="onCustomDateChange()" style="height: 31px; border-radius: 6px;" title="Apply Date Filter">
+                <!-- Filter & Reset Buttons -->
+                <div class="col-lg-2 col-md-3 col-sm-6 d-flex align-items-end gap-1">
+                    <button class="btn btn-sm btn-success fw-bold shadow-sm flex-fill" onclick="onCustomDateChange()" style="height: 31px; border-radius: 6px;" title="Apply Date Filter">
                         <i class="fa-solid fa-filter me-1"></i> Filter
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary fw-bold shadow-sm" onclick="clearDateFilter()" style="height: 31px; border-radius: 6px;" title="Reset / Show All">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
                     </button>
                 </div>
 
                 <!-- Search Input -->
-                <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="col-lg-2 col-md-3 col-sm-6">
                     <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">Search Filter</label>
                     <div class="input-group input-group-sm shadow-sm rounded-2">
                         <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" class="form-control border-start-0" id="searchKeyword" placeholder="Search by Series No, PIN, Patient..." onkeyup="filterData()">
+                        <input type="text" class="form-control border-start-0" id="searchKeyword" placeholder="Search..." onkeyup="filterData()">
                     </div>
                 </div>
 
@@ -356,14 +359,15 @@
             <!-- Quick Presets -->
             <div class="d-flex flex-wrap align-items-center gap-1 mt-3 pt-2 border-top">
                 <span class="text-muted small fw-bold text-uppercase me-2" style="font-size: 10px;">Quick Presets:</span>
+                <button class="chip-btn active" onclick="setPresetRange('all')">All Records</button>
                 <button class="chip-btn" onclick="setPresetRange('today')">Today (Aug 28)</button>
                 <button class="chip-btn" onclick="setPresetRange('this_month')">August 2026 (08/01 - 08/28)</button>
                 <button class="chip-btn" onclick="setPresetRange('last_month')">July 2026 (07/01 - 07/31)</button>
-                <button class="chip-btn active" onclick="setPresetRange('jul_aug')">July to August 2026 (07/01 - 08/28)</button>
+                <button class="chip-btn" onclick="setPresetRange('jul_aug')">July to August 2026 (07/01 - 08/28)</button>
                 <button class="chip-btn" onclick="setPresetRange('q2')">2nd Quarter (04/01 - 06/30)</button>
                 <button class="chip-btn" onclick="setPresetRange('q1')">1st Quarter (01/01 - 03/31)</button>
-                <button class="chip-btn" onclick="setPresetRange('all')">All Records</button>
             </div>
+        </div>
         </div>
 
         <!-- 4 Executive KPI Cards -->
@@ -748,13 +752,24 @@
             filterData();
         }
 
-        let filterStartDateStr = '2026-07-01';
-        let filterEndDateStr = '2026-08-28';
+        let filterStartDateStr = '';
+        let filterEndDateStr = '';
 
         function onCustomDateChange() {
             filterStartDateStr = document.getElementById('startDateInput').value;
             filterEndDateStr = document.getElementById('endDateInput').value;
             document.querySelectorAll('.chip-btn:not(.status-chip)').forEach(b => b.classList.remove('active'));
+            filterData();
+        }
+
+        function clearDateFilter() {
+            document.getElementById('startDateInput').value = '';
+            document.getElementById('endDateInput').value = '';
+            filterStartDateStr = '';
+            filterEndDateStr = '';
+            document.querySelectorAll('.chip-btn:not(.status-chip)').forEach(b => b.classList.remove('active'));
+            const allBtn = document.querySelector('.chip-btn[onclick*="\'all\'"]');
+            if (allBtn) allBtn.classList.add('active');
             filterData();
         }
 
@@ -781,8 +796,8 @@
                 filterStartDateStr = '2026-01-01';
                 filterEndDateStr = '2026-03-31';
             } else if (type === 'all') {
-                filterStartDateStr = '2020-01-01';
-                filterEndDateStr = '2030-12-31';
+                filterStartDateStr = '';
+                filterEndDateStr = '';
             }
 
             document.getElementById('startDateInput').value = filterStartDateStr;
@@ -792,15 +807,20 @@
 
         function filterData() {
             const search = (document.getElementById('searchKeyword').value || '').toLowerCase().trim();
-            const startTimestamp = new Date(filterStartDateStr + 'T00:00:00').getTime();
-            const endTimestamp = new Date(filterEndDateStr + 'T23:59:59').getTime();
+            const hasDateFilter = Boolean(filterStartDateStr || filterEndDateStr);
+            const startTimestamp = filterStartDateStr ? new Date(filterStartDateStr + 'T00:00:00').getTime() : 0;
+            const endTimestamp = filterEndDateStr ? new Date(filterEndDateStr + 'T23:59:59').getTime() : Infinity;
 
             viewAnnexC = masterAnnexC.filter(item => {
                 const d = parseToDate(item.date_filed) || parseToDate(item.date_admission);
                 let matchDate = true;
-                if (d) {
-                    const t = d.getTime();
-                    matchDate = (t >= startTimestamp && t <= endTimestamp);
+                if (hasDateFilter) {
+                    if (d) {
+                        const t = d.getTime();
+                        matchDate = (t >= startTimestamp && t <= endTimestamp);
+                    } else {
+                        matchDate = false;
+                    }
                 }
 
                 let matchStatus = true;
@@ -824,9 +844,13 @@
             viewAnnexB = masterAnnexB.filter(item => {
                 const d = parseToDate(item.date_admission) || parseToDate(item.date_discharge);
                 let matchDate = true;
-                if (d) {
-                    const t = d.getTime();
-                    matchDate = (t >= startTimestamp && t <= endTimestamp);
+                if (hasDateFilter) {
+                    if (d) {
+                        const t = d.getTime();
+                        matchDate = (t >= startTimestamp && t <= endTimestamp);
+                    } else {
+                        matchDate = false;
+                    }
                 }
 
                 const matchSearch = !search ||
