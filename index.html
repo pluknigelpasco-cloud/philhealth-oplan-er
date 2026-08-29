@@ -838,8 +838,9 @@
                 if (selectedFacility === 'HOSPITAL') matchFacility = !isAbtcClaim;
                 else if (selectedFacility === 'ABTC') matchFacility = isAbtcClaim;
 
-                // Annex C: Filter strictly by Admission Date (PhilHealth Standard)
-                const d = parseToDate(item.date_admission);
+                // Annex C: Filter by Date Received / Date Filed / Date Refiled (PhilHealth Standard)
+                // NOT admission date — a July admission can be received/filed in August
+                const d = parseToDate(item.date_refiled) || parseToDate(item.date_filed);
                 let matchDate = true;
                 if (hasDateFilter) {
                     if (d) {
