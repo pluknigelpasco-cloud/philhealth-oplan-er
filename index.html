@@ -870,9 +870,12 @@
             });
 
             viewAnnexB = masterAnnexB.filter(item => {
-                // Strictly exclude IBNR claims without finalized amounts
+                // Block ONLY known fake placeholder ICDs and amounts injected by old extension
+                // Legitimate pending claims (null amount) are ALLOWED — they show as "-"
+                const FAKE_AMTS = new Set([10604, 10684.8, 1100, 3000]);
                 const amt = Number(item.claim_amount);
-                if (!amt || isNaN(amt) || amt <= 0) return false;
+                if (FAKE_AMTS.has(amt)) return false;
+                if (item.icd_rvs_code === 'J18.9') return false;
 
                 // Strictly base IBNR on Admission Date (PhilHealth Annex B Standard)
                 const d = parseToDate(item.date_admission);
