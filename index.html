@@ -1168,21 +1168,47 @@
                         let rec = parseExactDate(colFiled >= 0 ? r[colFiled] : '');
                         
                         // Extract exact Code (e.g. OPER1, 90935, N39.0, NSD01)
-                        let icd = (col1stRvs >= 0 && r[col1stRvs]) ? String(r[col1stRvs]).trim() : '';
-                        if (!icd && col1stIcd >= 0 && r[col1stIcd]) icd = String(r[col1stIcd]).trim();
-                        if (!icd && col2ndRvs >= 0 && r[col2ndRvs]) icd = String(r[col2ndRvs]).trim();
-                        if (!icd && col2ndIcd >= 0 && r[col2ndIcd]) icd = String(r[col2ndIcd]).trim();
-                        if (!icd) icd = null;
+                        let icd = null;
+                        if (r[20] && String(r[20]).trim() !== '' && String(r[20]).trim() !== '-') icd = String(r[20]).trim();
+                        else if (r[19] && String(r[19]).trim() !== '' && String(r[19]).trim() !== '-') icd = String(r[19]).trim();
+                        else if (r[22] && String(r[22]).trim() !== '' && String(r[22]).trim() !== '-') icd = String(r[22]).trim();
+                        else if (r[21] && String(r[21]).trim() !== '' && String(r[21]).trim() !== '-') icd = String(r[21]).trim();
+                        else if (col1stRvs >= 0 && r[col1stRvs] && String(r[col1stRvs]).trim() !== '-') icd = String(r[col1stRvs]).trim();
+                        else if (col1stIcd >= 0 && r[col1stIcd] && String(r[col1stIcd]).trim() !== '-') icd = String(r[col1stIcd]).trim();
+                        else if (col2ndRvs >= 0 && r[col2ndRvs] && String(r[col2ndRvs]).trim() !== '-') icd = String(r[col2ndRvs]).trim();
+                        else if (col2ndIcd >= 0 && r[col2ndIcd] && String(r[col2ndIcd]).trim() !== '-') icd = String(r[col2ndIcd]).trim();
+
+                        if (!icd) {
+                            for (let cell of r) {
+                                if (typeof cell === 'string') {
+                                    const tr = cell.trim().toUpperCase();
+                                    if (/^(OPER1|90935|90375|NSD01|O80\.0|N39\.0|J18\.9|A09|K35\.8|59510|Z38\.0|[A-Z][0-9]{2}(\.[0-9]+)?|[0-9]{5})$/.test(tr)) {
+                                        icd = tr;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
 
                         // Extract exact Amount
                         let amt = null;
-                        if (col1stTotal >= 0 && r[col1stTotal]) {
-                            amt = parseFloat(String(r[col1stTotal]).replace(/[^0-9.]/g, '')) || null;
+                        if (col1stTotal >= 0 && r[col1stTotal] !== undefined && r[col1stTotal] !== '') {
+                            const p = parseFloat(String(r[col1stTotal]).replace(/,/g, '').replace(/[^0-9.]/g, ''));
+                            if (!isNaN(p) && p > 0) amt = p;
                         }
-                        if (!amt && colPaidHci >= 0 && r[colPaidHci]) {
-                            const hci = parseFloat(String(r[colPaidHci]).replace(/[^0-9.]/g, '')) || 0;
-                            const hcp = (colPaidHcp >= 0 && r[colPaidHcp]) ? parseFloat(String(r[colPaidHcp]).replace(/[^0-9.]/g, '')) || 0 : 0;
-                            if (hci + hcp > 0) amt = hci + hcp;
+                        if (!amt && r[13] !== undefined && r[13] !== '') {
+                            const p = parseFloat(String(r[13]).replace(/,/g, '').replace(/[^0-9.]/g, ''));
+                            if (!isNaN(p) && p > 0) amt = p;
+                        }
+                        if (!amt && r[11] !== undefined && r[11] !== '') {
+                            const hci = parseFloat(String(r[11]).replace(/,/g, '').replace(/[^0-9.]/g, '')) || 0;
+                            const pf = (r[12] !== undefined) ? (parseFloat(String(r[12]).replace(/,/g, '').replace(/[^0-9.]/g, '')) || 0) : 0;
+                            if (hci + pf > 0) amt = hci + pf;
+                        }
+                        if (!amt && r[24] !== undefined && r[24] !== '') {
+                            const paidHci = parseFloat(String(r[24]).replace(/,/g, '').replace(/[^0-9.]/g, '')) || 0;
+                            const paidHcp = (r[25] !== undefined) ? (parseFloat(String(r[25]).replace(/,/g, '').replace(/[^0-9.]/g, '')) || 0) : 0;
+                            if (paidHci + paidHcp > 0) amt = paidHci + paidHcp;
                         }
 
                         let st = (colStatus >= 0 && r[colStatus]) ? String(r[colStatus]).trim().toUpperCase() : 'IN PROCESS';
