@@ -716,7 +716,22 @@
                 ]);
 
                 masterAnnexC = (cData || []).filter(isCleanPatient);
-                masterAnnexB = (bData || []).filter(isCleanPatient);
+                
+                // Realtime Auto-Routing: Instantly remove transmitted claims from IBNR (Annex B)
+                const transmittedSet = new Set();
+                masterAnnexC.forEach(c => {
+                    if (c.encounter_no) transmittedSet.add(String(c.encounter_no).trim().toUpperCase());
+                    if (c.claim_series_no) transmittedSet.add(String(c.claim_series_no).trim().toUpperCase());
+                    if (c.patient_surname && c.date_admission) {
+                        transmittedSet.add(`${c.patient_surname.trim().toUpperCase()}_${c.date_admission}`);
+                    }
+                });
+
+                masterAnnexB = (bData || []).filter(isCleanPatient).filter(b => {
+                    const enc = String(b.encounter_no || b.claim_code || '').trim().toUpperCase();
+                    const nameDateKey = `${(b.patient_surname || '').trim().toUpperCase()}_${b.date_admission}`;
+                    return !transmittedSet.has(enc) && !transmittedSet.has(nameDateKey);
+                });
 
                 ind.innerText = `Live (${masterAnnexC.length.toLocaleString()} Claims | ${masterAnnexB.length.toLocaleString()} IBNR)`;
                 filterData();
