@@ -1261,43 +1261,41 @@
                     masterAnnexB = masterAnnexB.filter(b => !transmittedCodes.has(String(b.encounter_no)) && !transmittedCodes.has(String(b.claim_code)));
                     filterData(); // Instant local render!
 
-                    // 2. Persist updates to Supabase (using direct PATCH for existing rows & POST for new ones)
-                    const patchPromises = parsedClaims.map(c => {
-                        return fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?claim_series_no=eq.${c.claim_series_no}`, {
-                            method: 'PATCH',
-                            headers: {
-                                'apikey': SUPABASE_KEY,
-                                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                icd_rvs_code: c.icd_rvs_code,
-                                claim_amount: c.claim_amount,
-                                claim_status: c.claim_status,
-                                date_admission: c.date_admission,
-                                date_discharge: c.date_discharge,
-                                date_filed: c.date_filed,
-                                member_pin: c.member_pin
-                            })
-                        });
-                    });
+                    // 2. Persist updates to Supabase using bulk chunked upsert (onConflict: claim_series_no)
+                    for (let i = 0; i < parsedClaims.length; i += 100) {
+                        const chunk = parsedClaims.slice(i, i + 100);
+                        try {
+                            await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?on_conflict=claim_series_no`, {
+                                method: 'POST',
+                                headers: {
+                                    'apikey': SUPABASE_KEY,
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'resolution=merge-duplicates'
+                                },
+                                body: JSON.stringify(chunk)
+                            });
+                        } catch(e) {
+                            console.warn('Chunk upsert error:', e);
+                        }
+                    }
 
                     // 3. Auto-delete transmitted encounters from annex_b_ibnr table in database
-                    for (let c of parsedClaims) {
-                        if (c.encounter_no) {
-                            fetch(`${SUPABASE_URL}/rest/v1/annex_b_ibnr?encounter_no=eq.${c.encounter_no}`, {
+                    const encsToDelete = parsedClaims.map(c => c.encounter_no).filter(Boolean);
+                    for (let i = 0; i < encsToDelete.length; i += 50) {
+                        const subEncs = encsToDelete.slice(i, i + 50);
+                        try {
+                            await fetch(`${SUPABASE_URL}/rest/v1/annex_b_ibnr?encounter_no=in.(${subEncs.join(',')})`, {
                                 method: 'DELETE',
                                 headers: {
                                     'apikey': SUPABASE_KEY,
                                     'Authorization': `Bearer ${SUPABASE_KEY}`
                                 }
                             });
-                        }
+                        } catch(e) {}
                     }
 
-                    await Promise.all(patchPromises);
-
-                    alert(`SUCCESS! Successfully imported & updated ${parsedClaims.length} Claim Details records into Annex C!`);
+                    alert(`SUCCESS! Successfully imported & updated ${parsedClaims.length} July Claim Details records into Annex C!`);
                     event.target.value = '';
                     fetchDashboardData();
                 } catch(err) {
