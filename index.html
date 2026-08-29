@@ -1058,33 +1058,50 @@
                         return;
                     }
 
-                    // Find header row index
-                    let headerRowIdx = 0;
+                    // Find exact table header row (e.g. Row 2 with 'Claim Series LHIO')
+                    let headerRowIdx = -1;
                     for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
-                        const rowStr = rawRows[i].join(' ').toUpperCase();
-                        if (rowStr.includes('SERIES') || rowStr.includes('PATIENT') || rowStr.includes('ADMISSION') || rowStr.includes('CLAIM DETAILS') || rowStr.includes('1ST CASE RATE')) {
+                        const rowStr = rawRows[i].map(c => String(c || '').toUpperCase()).join(' | ');
+                        if (rowStr.includes('CLAIM SERIES') || rowStr.includes('SERIES LHIO') || (rowStr.includes('PATIENT') && rowStr.includes('ADMISSION'))) {
                             headerRowIdx = i;
                             break;
+                        }
+                    }
+
+                    if (headerRowIdx === -1) {
+                        // Fallback to row with most non-empty string headers
+                        headerRowIdx = 0;
+                        let maxCols = 0;
+                        for (let i = 0; i < Math.min(rawRows.length, 5); i++) {
+                            const count = rawRows[i].filter(c => typeof c === 'string' && c.trim().length > 0).length;
+                            if (count > maxCols) {
+                                maxCols = count;
+                                headerRowIdx = i;
+                            }
                         }
                     }
 
                     const headers = rawRows[headerRowIdx].map(h => String(h || '').trim().toUpperCase());
                     
                     const findCol = (terms) => headers.findIndex(h => terms.some(t => h === t || h.includes(t)));
-                    const colSeries = findCol(['SERIES', 'CLAIM SERIES', 'LHIO', 'SERIES NUMBER']);
-                    const colEnc = findCol(['HOSPITAL CLAIM NUMBER', 'HOSPITAL CLAIM', 'ENCOUNTER', 'CASE #', 'CASE NO']);
+                    const colSeries = findCol(['CLAIM SERIES LHIO', 'CLAIM SERIES', 'SERIES LHIO', 'SERIES']);
+                    const colEnc = findCol(['CLAIM NUMBER', 'HOSPITAL CLAIM NUMBER', 'HOSPITAL CLAIM', 'ENCOUNTER']);
+                    const colPin = findCol(['PIN', 'MEMBER PIN', 'PHILHEALTH PIN']);
+                    const colMember = findCol(['NAME OF MEMBER', 'MEMBER NAME']);
                     const colPat = findCol(['NAME OF PATIENT', 'PATIENT NAME', 'PATIENT']);
                     const colAdm = findCol(['ADMISSION DATE', 'DATE ADMITTED', 'DATE OF ADMISSION']);
-                    const colDis = findCol(['DISCHARGED DATE', 'DISCHARGE DATE', 'DATE DISCHARGED', 'DATE OF DISCHARGE']);
-                    const colFiled = findCol(['RECEIVED DATE', 'DATE FILED', 'DATE RECEIVED', 'RECEIVED']);
+                    const colDis = findCol(['DISCHARGED DATE', 'DISCHARGE DATE', 'DATE DISCHARGED']);
+                    const colFiled = findCol(['RECEIVED', 'RECEIVED DATE', 'DATE FILED', 'DATE RECEIVED']);
                     const colStatus = findCol(['STATUS', 'CLAIM STATUS']);
 
-                    // Claim Details columns (Image 2)
-                    const col1stRvs = findCol(['1ST RVS CODE', '1ST RVS', 'RVS CODE']);
+                    // Search for ICD / RVS columns
                     const col1stIcd = findCol(['1ST ICD CODE', '1ST ICD', 'ICD 10', 'ICD']);
-                    const col2ndRvs = findCol(['2ND RVS CODE', '2ND RVS']);
+                    const col1stRvs = findCol(['1ST RVS CODE', '1ST RVS', 'RVS CODE', 'RVS']);
                     const col2ndIcd = findCol(['2ND ICD CODE', '2ND ICD']);
-                    const col1stTotal = findCol(['1ST CASE RATE TOTAL', 'TOTAL', 'FIRST CASE RATE AMOUNT', 'CLAIM AMOUNT']);
+                    const col2ndRvs = findCol(['2ND RVS CODE', '2ND RVS']);
+                    
+                    // Search for Amount columns
+                    const col1stTotal = findCol(['1ST CASE RATE TOTAL', 'FIRST CASE RATE AMOUNT', 'TOTAL', 'CLAIM AMOUNT']);
                     const colPaidHci = findCol(['PAID TO HCI']);
                     const colPaidHcp = findCol(['PAID TO HCP']);
 
@@ -1100,13 +1117,17 @@
                         if (series.length < 6) continue;
 
                         let hospNo = (colEnc >= 0 && r[colEnc]) ? String(r[colEnc]).trim() : series;
+                        let pin = (colPin >= 0 && r[colPin]) ? String(r[colPin]).replace(/[^0-9]/g, '') : '';
                         let patName = (colPat >= 0 && r[colPat]) ? String(r[colPat]).trim() : '';
+                        let memName = (colMember >= 0 && r[colMember]) ? String(r[colMember]).trim() : patName;
+                        
                         if (!patName) {
                             patName = String(r.find && r.find((c, idx) => idx > 0 && /[A-Za-zÑñ]{3,}/.test(String(c))) || '');
                         }
                         if (!isGenuinePatientName(patName)) continue;
 
                         const nameObj = parseName(patName);
+                        const memObj = parseName(memName || patName);
                         let adm = parseExactDate(colAdm >= 0 ? r[colAdm] : '');
                         let dis = parseExactDate(colDis >= 0 ? r[colDis] : '');
                         let rec = parseExactDate(colFiled >= 0 ? r[colFiled] : '');
@@ -1114,6 +1135,8 @@
                         // Extract exact Code (e.g. OPER1, 90935, N39.0, NSD01)
                         let icd = (col1stRvs >= 0 && r[col1stRvs]) ? String(r[col1stRvs]).trim() : '';
                         if (!icd && col1stIcd >= 0 && r[col1stIcd]) icd = String(r[col1stIcd]).trim();
+                        if (!icd && col2ndRvs >= 0 && r[col2ndRvs]) icd = String(r[col2ndRvs]).trim();
+                        if (!icd && col2ndIcd >= 0 && r[col2ndIcd]) icd = String(r[col2ndIcd]).trim();
                         if (!icd) icd = null;
 
                         // Extract exact Amount
@@ -1140,10 +1163,10 @@
                             patient_surname: nameObj.last,
                             patient_firstname: nameObj.first,
                             patient_middlename: nameObj.middle,
-                            member_surname: nameObj.last,
-                            member_firstname: nameObj.first,
-                            member_middlename: nameObj.middle,
-                            member_pin: null,
+                            member_surname: memObj.last || nameObj.last,
+                            member_firstname: memObj.first || nameObj.first,
+                            member_middlename: memObj.middle || nameObj.middle,
+                            member_pin: (pin && pin.length >= 10) ? pin : null,
                             date_admission: adm || rec || new Date().toISOString().slice(0, 10),
                             date_discharge: dis || adm || rec || new Date().toISOString().slice(0, 10),
                             date_filed: rec || new Date().toISOString().slice(0, 10),
