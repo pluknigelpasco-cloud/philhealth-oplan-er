@@ -1021,6 +1021,27 @@
             `;
         }
 
+        const chargeBlacklist = [
+            'SURGEON', 'PROCEDURE', 'EXPANDED', 'PACKAGE', 'NEW BORN', 'NEWBORN',
+            'ANESTHESIOLOGIST', 'PEDIATRICIAN', 'OB-GYNE', 'CARE', 'PROFESSIONAL SERVICE',
+            'SERVICE', 'CHARGE', 'FEE', 'ROOM', 'DELIVERY', 'MACHINE', 'USED', 'ATTENDING',
+            'PHYSICIAN', 'DOCTOR', 'NURSE', 'TOTAL', 'SUMMARY', 'BB.', 'B.B.', 'BABY',
+            'DISCOUNT', 'ADJUSTMENT', 'CASHIER', 'MEDICINE', 'SUPPLIES', 'LABORATORY', 'XRAY',
+            'ADMISSION', 'DISCHARGE', 'PARTICULARS', 'HOSPITAL', 'DR.', 'DR,', 'DR '
+        ];
+
+        function isGenuinePatientName(name) {
+            if (!name || typeof name !== 'string') return false;
+            const clean = name.trim().toUpperCase();
+            if (clean.length < 4) return false;
+            for (let term of chargeBlacklist) {
+                if (clean.includes(term)) return false;
+            }
+            if (!/^[A-ZÑ\s,.-]+$/.test(clean)) return false;
+            const words = clean.split(/[\s,]+/).filter(w => w.length >= 2);
+            return words.length >= 2;
+        }
+
         function handleDirectFileImport(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -1041,7 +1062,7 @@
                     let headerRowIdx = 0;
                     for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
                         const rowStr = rawRows[i].join(' ').toUpperCase();
-                        if (rowStr.includes('SERIES') || rowStr.includes('PATIENT') || rowStr.includes('ADMISSION')) {
+                        if (rowStr.includes('SERIES') || rowStr.includes('PATIENT') || rowStr.includes('ADMISSION') || rowStr.includes('CLAIM DETAILS') || rowStr.includes('1ST CASE RATE')) {
                             headerRowIdx = i;
                             break;
                         }
@@ -1049,16 +1070,23 @@
 
                     const headers = rawRows[headerRowIdx].map(h => String(h || '').trim().toUpperCase());
                     
-                    const findCol = (terms) => headers.findIndex(h => terms.some(t => h.includes(t)));
-                    const colSeries = findCol(['SERIES', 'CLAIM SERIES', 'LHIO']);
-                    const colEnc = findCol(['HOSPITAL CLAIM', 'ENCOUNTER', 'CASE #', 'CASE NO', 'ACCOUNT']);
+                    const findCol = (terms) => headers.findIndex(h => terms.some(t => h === t || h.includes(t)));
+                    const colSeries = findCol(['SERIES', 'CLAIM SERIES', 'LHIO', 'SERIES NUMBER']);
+                    const colEnc = findCol(['HOSPITAL CLAIM NUMBER', 'HOSPITAL CLAIM', 'ENCOUNTER', 'CASE #', 'CASE NO']);
                     const colPat = findCol(['NAME OF PATIENT', 'PATIENT NAME', 'PATIENT']);
-                    const colAdm = findCol(['ADMISSION', 'DATE ADMITTED', 'DATE OF ADMISSION']);
-                    const colDis = findCol(['DISCHARGE', 'DATE DISCHARGED', 'DATE OF DISCHARGE']);
-                    const colFiled = findCol(['RECEIVED', 'DATE FILED', 'DATE RECEIVED', 'TRANSMITTED']);
-                    const colIcd = findCol(['ICD', 'RVS', 'DIAGNOSIS', 'PACKAGE']);
-                    const colAmt = findCol(['CLAIM AMOUNT', 'AMOUNT', 'TOTAL AMOUNT', 'RATE AMOUNT']);
+                    const colAdm = findCol(['ADMISSION DATE', 'DATE ADMITTED', 'DATE OF ADMISSION']);
+                    const colDis = findCol(['DISCHARGED DATE', 'DISCHARGE DATE', 'DATE DISCHARGED', 'DATE OF DISCHARGE']);
+                    const colFiled = findCol(['RECEIVED DATE', 'DATE FILED', 'DATE RECEIVED', 'RECEIVED']);
                     const colStatus = findCol(['STATUS', 'CLAIM STATUS']);
+
+                    // Claim Details columns (Image 2)
+                    const col1stRvs = findCol(['1ST RVS CODE', '1ST RVS', 'RVS CODE']);
+                    const col1stIcd = findCol(['1ST ICD CODE', '1ST ICD', 'ICD 10', 'ICD']);
+                    const col2ndRvs = findCol(['2ND RVS CODE', '2ND RVS']);
+                    const col2ndIcd = findCol(['2ND ICD CODE', '2ND ICD']);
+                    const col1stTotal = findCol(['1ST CASE RATE TOTAL', 'TOTAL', 'FIRST CASE RATE AMOUNT', 'CLAIM AMOUNT']);
+                    const colPaidHci = findCol(['PAID TO HCI']);
+                    const colPaidHcp = findCol(['PAID TO HCP']);
 
                     const parsedClaims = [];
                     for (let r of rawRows.slice(headerRowIdx + 1)) {
@@ -1082,10 +1110,24 @@
                         let adm = parseExactDate(colAdm >= 0 ? r[colAdm] : '');
                         let dis = parseExactDate(colDis >= 0 ? r[colDis] : '');
                         let rec = parseExactDate(colFiled >= 0 ? r[colFiled] : '');
-                        let icd = (colIcd >= 0 && r[colIcd]) ? String(r[colIcd]).trim() : null;
-                        let amt = (colAmt >= 0 && r[colAmt]) ? parseFloat(String(r[colAmt]).replace(/[^0-9.]/g, '')) : null;
-                        let st = (colStatus >= 0 && r[colStatus]) ? String(r[colStatus]).trim().toUpperCase() : 'IN PROCESS';
+                        
+                        // Extract exact Code (e.g. OPER1, 90935, N39.0, NSD01)
+                        let icd = (col1stRvs >= 0 && r[col1stRvs]) ? String(r[col1stRvs]).trim() : '';
+                        if (!icd && col1stIcd >= 0 && r[col1stIcd]) icd = String(r[col1stIcd]).trim();
+                        if (!icd) icd = null;
 
+                        // Extract exact Amount
+                        let amt = null;
+                        if (col1stTotal >= 0 && r[col1stTotal]) {
+                            amt = parseFloat(String(r[col1stTotal]).replace(/[^0-9.]/g, '')) || null;
+                        }
+                        if (!amt && colPaidHci >= 0 && r[colPaidHci]) {
+                            const hci = parseFloat(String(r[colPaidHci]).replace(/[^0-9.]/g, '')) || 0;
+                            const hcp = (colPaidHcp >= 0 && r[colPaidHcp]) ? parseFloat(String(r[colPaidHcp]).replace(/[^0-9.]/g, '')) || 0 : 0;
+                            if (hci + hcp > 0) amt = hci + hcp;
+                        }
+
+                        let st = (colStatus >= 0 && r[colStatus]) ? String(r[colStatus]).trim().toUpperCase() : 'IN PROCESS';
                         let normStatus = 'IN PROCESS';
                         if (st.includes('CHEQUE') || st.includes('PAID')) normStatus = 'WITH CHEQUE';
                         else if (st.includes('RETURN') || st.includes('RTH')) normStatus = 'RETURN';
@@ -1131,7 +1173,7 @@
                         });
                     }
 
-                    alert(`SUCCESS! Successfully imported ${parsedClaims.length} July claims into Annex C!`);
+                    alert(`SUCCESS! Successfully imported ${parsedClaims.length} Claim Details records into Annex C!`);
                     event.target.value = '';
                     fetchDashboardData();
                 } catch(err) {
