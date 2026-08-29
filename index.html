@@ -872,7 +872,8 @@
                 const amt = Number(item.claim_amount);
                 if (!amt || isNaN(amt) || amt <= 0) return false;
 
-                const d = parseToDate(item.date_admission) || parseToDate(item.date_discharge);
+                // Strictly base IBNR on Admission Date (PhilHealth Annex B Standard)
+                const d = parseToDate(item.date_admission);
                 let matchDate = true;
                 if (hasDateFilter) {
                     if (d) {
