@@ -1030,50 +1030,112 @@
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const sheetName = workbook.SheetNames[0];
-                    const rawJson = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+                    const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
                     
-                    const parsedClaims = [];
-                    for (let r of rawJson.slice(1)) {
-                        if (!r || r.length < 3) continue;
-                        const series = String(r[0] || '').replace(/[^0-9]/g, '');
-                        if (series.length >= 6) {
-                            parsedClaims.push({
-                                claim_series_no: series,
-                                encounter_no: String(r[1] || series),
-                                patient_surname: String(r[2] || '').split(',')[0] || 'PATIENT',
-                                patient_firstname: String(r[2] || '').split(',')[1] || '',
-                                member_surname: String(r[2] || '').split(',')[0] || 'PATIENT',
-                                member_firstname: String(r[2] || '').split(',')[1] || '',
-                                member_pin: String(r[4] || '120515828155'),
-                                date_admission: new Date().toISOString().slice(0, 10),
-                                date_discharge: new Date().toISOString().slice(0, 10),
-                                date_filed: new Date().toISOString().slice(0, 10),
-                                icd_rvs_code: 'OPER1',
-                                claim_amount: Number(r[9]) || 9409,
-                                claim_status: 'WITH CHEQUE'
-                            });
+                    if (!rawRows || rawRows.length < 2) {
+                        alert('Error: Excel file is empty or has no data rows.');
+                        return;
+                    }
+
+                    // Find header row index
+                    let headerRowIdx = 0;
+                    for (let i = 0; i < Math.min(rawRows.length, 10); i++) {
+                        const rowStr = rawRows[i].join(' ').toUpperCase();
+                        if (rowStr.includes('SERIES') || rowStr.includes('PATIENT') || rowStr.includes('ADMISSION')) {
+                            headerRowIdx = i;
+                            break;
                         }
                     }
 
-                    if (parsedClaims.length > 0) {
-                        for (let i = 0; i < parsedClaims.length; i += 100) {
-                            const chunk = parsedClaims.slice(i, i + 100);
-                            await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims`, {
-                                method: 'POST',
-                                headers: {
-                                    'apikey': SUPABASE_KEY,
-                                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                                    'Content-Type': 'application/json',
-                                    'Prefer': 'resolution=merge-duplicates'
-                                },
-                                body: JSON.stringify(chunk)
-                            });
+                    const headers = rawRows[headerRowIdx].map(h => String(h || '').trim().toUpperCase());
+                    
+                    const findCol = (terms) => headers.findIndex(h => terms.some(t => h.includes(t)));
+                    const colSeries = findCol(['SERIES', 'CLAIM SERIES', 'LHIO']);
+                    const colEnc = findCol(['HOSPITAL CLAIM', 'ENCOUNTER', 'CASE #', 'CASE NO', 'ACCOUNT']);
+                    const colPat = findCol(['NAME OF PATIENT', 'PATIENT NAME', 'PATIENT']);
+                    const colAdm = findCol(['ADMISSION', 'DATE ADMITTED', 'DATE OF ADMISSION']);
+                    const colDis = findCol(['DISCHARGE', 'DATE DISCHARGED', 'DATE OF DISCHARGE']);
+                    const colFiled = findCol(['RECEIVED', 'DATE FILED', 'DATE RECEIVED', 'TRANSMITTED']);
+                    const colIcd = findCol(['ICD', 'RVS', 'DIAGNOSIS', 'PACKAGE']);
+                    const colAmt = findCol(['CLAIM AMOUNT', 'AMOUNT', 'TOTAL AMOUNT', 'RATE AMOUNT']);
+                    const colStatus = findCol(['STATUS', 'CLAIM STATUS']);
+
+                    const parsedClaims = [];
+                    for (let r of rawRows.slice(headerRowIdx + 1)) {
+                        if (!r || r.length === 0) continue;
+                        
+                        let series = (colSeries >= 0 && r[colSeries]) ? String(r[colSeries]).replace(/[^0-9]/g, '') : '';
+                        if (!series || series.length < 6) {
+                            series = (r.find && r.find(c => /^[0-9]{12,18}$/.test(String(c).replace(/[^0-9]/g, '')))) || '';
+                            series = String(series).replace(/[^0-9]/g, '');
                         }
-                        alert(`SUCCESS! Uploaded ${parsedClaims.length} claims!`);
-                        fetchDashboardData();
+                        if (series.length < 6) continue;
+
+                        let hospNo = (colEnc >= 0 && r[colEnc]) ? String(r[colEnc]).trim() : series;
+                        let patName = (colPat >= 0 && r[colPat]) ? String(r[colPat]).trim() : '';
+                        if (!patName) {
+                            patName = String(r.find && r.find((c, idx) => idx > 0 && /[A-Za-zÑñ]{3,}/.test(String(c))) || '');
+                        }
+                        if (!isGenuinePatientName(patName)) continue;
+
+                        const nameObj = parseName(patName);
+                        let adm = parseExactDate(colAdm >= 0 ? r[colAdm] : '');
+                        let dis = parseExactDate(colDis >= 0 ? r[colDis] : '');
+                        let rec = parseExactDate(colFiled >= 0 ? r[colFiled] : '');
+                        let icd = (colIcd >= 0 && r[colIcd]) ? String(r[colIcd]).trim() : null;
+                        let amt = (colAmt >= 0 && r[colAmt]) ? parseFloat(String(r[colAmt]).replace(/[^0-9.]/g, '')) : null;
+                        let st = (colStatus >= 0 && r[colStatus]) ? String(r[colStatus]).trim().toUpperCase() : 'IN PROCESS';
+
+                        let normStatus = 'IN PROCESS';
+                        if (st.includes('CHEQUE') || st.includes('PAID')) normStatus = 'WITH CHEQUE';
+                        else if (st.includes('RETURN') || st.includes('RTH')) normStatus = 'RETURN';
+                        else if (st.includes('DENIED')) normStatus = 'DENIED';
+                        else if (st.includes('VOUCHER')) normStatus = 'WITH VOUCHER';
+
+                        parsedClaims.push({
+                            claim_series_no: series,
+                            encounter_no: hospNo || series,
+                            patient_surname: nameObj.last,
+                            patient_firstname: nameObj.first,
+                            patient_middlename: nameObj.middle,
+                            member_surname: nameObj.last,
+                            member_firstname: nameObj.first,
+                            member_middlename: nameObj.middle,
+                            member_pin: null,
+                            date_admission: adm || rec || new Date().toISOString().slice(0, 10),
+                            date_discharge: dis || adm || rec || new Date().toISOString().slice(0, 10),
+                            date_filed: rec || new Date().toISOString().slice(0, 10),
+                            icd_rvs_code: icd,
+                            claim_amount: amt,
+                            claim_status: normStatus
+                        });
                     }
+
+                    if (parsedClaims.length === 0) {
+                        alert('No valid patient claim records found in this file.');
+                        return;
+                    }
+
+                    // Bulk upload in chunks
+                    for (let i = 0; i < parsedClaims.length; i += 100) {
+                        const chunk = parsedClaims.slice(i, i + 100);
+                        await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'resolution=merge-duplicates'
+                            },
+                            body: JSON.stringify(chunk)
+                        });
+                    }
+
+                    alert(`SUCCESS! Successfully imported ${parsedClaims.length} July claims into Annex C!`);
+                    event.target.value = '';
+                    fetchDashboardData();
                 } catch(err) {
-                    alert('Error reading Excel: ' + err.message);
+                    alert('Error reading Excel file: ' + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
