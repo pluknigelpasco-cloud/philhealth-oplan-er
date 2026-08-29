@@ -1300,7 +1300,21 @@
                         } catch(e) {}
                     }
 
-                    alert(`SUCCESS! Successfully imported & updated ${parsedClaims.length} July Claim Details records into Annex C!`);
+                    // Detect the actual month/year range from the imported data
+                    const admDates = parsedClaims.map(c => c.date_admission).filter(Boolean).sort();
+                    let periodLabel = 'Claim Details';
+                    if (admDates.length > 0) {
+                        const firstD = new Date(admDates[0]);
+                        const lastD = new Date(admDates[admDates.length - 1]);
+                        const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                        if (firstD.getMonth() === lastD.getMonth() && firstD.getFullYear() === lastD.getFullYear()) {
+                            periodLabel = `${monthNames[firstD.getMonth()]} ${firstD.getFullYear()}`;
+                        } else {
+                            periodLabel = `${monthNames[firstD.getMonth()]} – ${monthNames[lastD.getMonth()]} ${lastD.getFullYear()}`;
+                        }
+                    }
+
+                    alert(`SUCCESS! Successfully imported & updated ${parsedClaims.length} ${periodLabel} Claim Details records into Annex C!`);
                     event.target.value = '';
                     fetchDashboardData();
                 } catch(err) {
