@@ -617,7 +617,8 @@
         let filterEndDate = moment('2026-08-28');
 
         function formatPHP(val) {
-            return '₱' + (Number(val) || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (val === null || val === undefined || isNaN(Number(val)) || Number(val) === 0) return '-';
+            return '₱' + Number(val).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function resolvePIN(c) {
@@ -941,7 +942,7 @@
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_admission)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_discharge)}</td>
                     <td class="font-mono small text-muted fw-semibold">${formatMMDDYYYY(c.date_filed)}</td>
-                    <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || 'OPER1'}</span></td>
+                    <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || '-'}</span></td>
                     <td class="text-end fw-bold font-mono">${formatPHP(c.claim_amount)}</td>
                     <td class="text-center">${getStatusPill(c.claim_status)}</td>
                 </tr>
@@ -966,7 +967,7 @@
                     <td class="font-mono small">${resolvePIN(b)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(b.date_admission)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(b.date_discharge)}</td>
-                    <td><span class="badge bg-light text-dark border font-mono">${b.icd_rvs_code || 'OPER1'}</span></td>
+                    <td><span class="badge bg-light text-dark border font-mono">${b.icd_rvs_code || '-'}</span></td>
                     <td class="text-end fw-bold font-mono">${formatPHP(b.claim_amount)}</td>
                     <td class="text-center">${getStatusPill('UNSUBMITTED')}</td>
                 </tr>
