@@ -872,12 +872,15 @@
             });
 
             viewAnnexB = masterAnnexB.filter(item => {
-                // Block ONLY known fake placeholder ICDs and amounts injected by old extension
-                // Legitimate pending claims (null amount) are ALLOWED — they show as "-"
                 const FAKE_AMTS = new Set([10604, 10684.8, 1100, 3000]);
                 const amt = Number(item.claim_amount);
                 if (FAKE_AMTS.has(amt)) return false;
                 if (item.icd_rvs_code === 'J18.9') return false;
+
+                // STRICT USER RULE: Require both valid ICD/RVS code AND positive Claim Amount
+                const hasIcd = item.icd_rvs_code && String(item.icd_rvs_code).trim() !== '' && String(item.icd_rvs_code).trim() !== '-';
+                const hasAmt = item.claim_amount !== null && item.claim_amount !== undefined && amt > 0;
+                if (!hasIcd || !hasAmt) return false;
 
                 // Strictly base IBNR on Admission Date (PhilHealth Annex B Standard)
                 const d = parseToDate(item.date_admission);
