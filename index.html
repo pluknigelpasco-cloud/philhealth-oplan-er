@@ -733,7 +733,26 @@
                     fetchAllRecordsFromSupabase('annex_b_ibnr', headers)
                 ]);
 
-                masterAnnexC = (cData || []).filter(isCleanPatient);
+                // Build cross-enrichment map from IBNR data
+                const ibnrMap = new Map();
+                (bData || []).forEach(b => {
+                    if (b.patient_surname && b.patient_firstname && b.icd_rvs_code && b.claim_amount && Number(b.claim_amount) > 0) {
+                        const key = `${b.patient_surname.trim().toUpperCase()}_${b.patient_firstname.trim().toUpperCase()}`;
+                        ibnrMap.set(key, { icd: b.icd_rvs_code, amt: b.claim_amount });
+                    }
+                });
+
+                masterAnnexC = (cData || []).filter(isCleanPatient).map(c => {
+                    if (!c.icd_rvs_code || !c.claim_amount || Number(c.claim_amount) === 0) {
+                        const key = `${(c.patient_surname || '').trim().toUpperCase()}_${(c.patient_firstname || '').trim().toUpperCase()}`;
+                        const matched = ibnrMap.get(key);
+                        if (matched) {
+                            if (!c.icd_rvs_code) c.icd_rvs_code = matched.icd;
+                            if (!c.claim_amount || Number(c.claim_amount) === 0) c.claim_amount = matched.amt;
+                        }
+                    }
+                    return c;
+                });
                 
                 // Realtime Auto-Routing: Instantly remove transmitted claims from IBNR (Annex B)
                 const transmittedSet = new Set();
