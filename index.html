@@ -972,8 +972,8 @@
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_admission)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_discharge)}</td>
                     <td class="font-mono small text-muted fw-semibold">${formatMMDDYYYY(c.date_filed)}</td>
-                    <td><span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code || '-'}</span></td>
-                    <td class="text-end fw-bold font-mono">${formatPHP(c.claim_amount)}</td>
+                    <td>${c.icd_rvs_code ? `<span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code}</span>` : `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning font-mono" style="font-size: 10px;" title="Auto-enriching via iHOMIS+ Extension v16.0 Auto-Digger">Pending Sync</span>`}</td>
+                    <td class="text-end fw-bold font-mono">${(c.claim_amount && Number(c.claim_amount) > 0) ? formatPHP(c.claim_amount) : `<span class="text-muted small fw-normal">Pending</span>`}</td>
                     <td class="text-center">${getStatusPill(c.claim_status)}</td>
                 </tr>
             `).join('');
