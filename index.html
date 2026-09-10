@@ -651,9 +651,14 @@
         }
 
         function formatFullName(last, first, middle) {
-            const l = (last || '').trim();
-            const f = (first || '').trim();
-            const m = (middle || '').trim();
+            let l = (last || '').trim();
+            let f = (first || '').trim();
+            let m = (middle || '').trim();
+            const bad = ['INDIRECT', 'CONTRIBUTOR', 'LISTAHANAN', 'SPONSORED', 'INDIGENT', 'INFORMAL', 'FORMAL', 'DEPENDENT', 'ENTERED', 'CATEGORY', 'MEMBERSHIP', 'NBB', 'POS-FINANCIALLY'];
+            const combined = (l + ' ' + f).toUpperCase();
+            if (bad.some(b => combined.includes(b))) {
+                return '-';
+            }
             if (l && f) return `${l}, ${f} ${m}`.trim();
             return l || f || '-';
         }
