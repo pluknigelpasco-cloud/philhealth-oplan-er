@@ -991,11 +991,47 @@
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_admission)}</td>
                     <td class="font-mono small text-muted">${formatMMDDYYYY(c.date_discharge)}</td>
                     <td class="font-mono small text-muted fw-semibold">${formatMMDDYYYY(c.date_filed)}</td>
-                    <td>${c.icd_rvs_code ? `<span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code}</span>` : `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning font-mono" style="font-size: 10px;" title="Auto-enriching via iHOMIS+ Extension v16.0 Auto-Digger">Pending Sync</span>`}</td>
-                    <td class="text-end fw-bold font-mono">${(c.claim_amount && Number(c.claim_amount) > 0) ? formatPHP(c.claim_amount) : `<span class="text-muted small fw-normal">Pending</span>`}</td>
+                    <td>${c.icd_rvs_code ? `<span class="badge bg-light text-dark border font-mono">${c.icd_rvs_code}</span>` : `<button class="btn btn-xs btn-outline-warning font-mono py-0 px-2 shadow-sm" onclick="promptUpdateAnnexC('${c.id}', '${(c.patient_surname || '').replace(/'/g, "\\'")}', 'icd')" style="font-size: 10px;" title="Click to set ICD-10/RVS Code"><i class="fa-solid fa-pen me-1"></i>Set ICD</button>`}</td>
+                    <td class="text-end fw-bold font-mono">${(c.claim_amount && Number(c.claim_amount) > 0) ? formatPHP(c.claim_amount) : `<button class="btn btn-xs btn-outline-primary font-mono py-0 px-2 shadow-sm" onclick="promptUpdateAnnexC('${c.id}', '${(c.patient_surname || '').replace(/'/g, "\\'")}', 'amt')" style="font-size: 10px;" title="Click to set Claim Amount"><i class="fa-solid fa-pen me-1"></i>Set Amount</button>`}</td>
                     <td class="text-center">${getStatusPill(c.claim_status)}</td>
                 </tr>
             `).join('');
+        }
+
+        async function promptUpdateAnnexC(id, patientName, field) {
+            if (field === 'icd') {
+                const code = prompt(`Enter ICD-10 / RVS Code for ${patientName}:`, '');
+                if (code && code.trim() !== '') {
+                    const cleanCode = code.trim().toUpperCase();
+                    await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?id=eq.${id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ icd_rvs_code: cleanCode })
+                    });
+                    fetchDashboardData(true);
+                }
+            } else if (field === 'amt') {
+                const amtStr = prompt(`Enter Claim Amount (₱) for ${patientName}:`, '');
+                if (amtStr && amtStr.trim() !== '') {
+                    const amt = parseFloat(amtStr.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(amt) && amt > 0) {
+                        await fetch(`${SUPABASE_URL}/rest/v1/annex_c_claims?id=eq.${id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ claim_amount: amt })
+                        });
+                        fetchDashboardData(true);
+                    }
+                }
+            }
         }
 
         function renderAnnexBTable() {
