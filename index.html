@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PhilHealth Oplan ER Monitoring Portal - CPH Balamban</title>
+    <!-- Official PhilHealth Portal Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23007a4d'/><path d='M50 18 L78 30 V52 C78 70 50 84 50 84 C50 84 22 70 22 52 V30 Z' fill='%23ffffff'/><path d='M50 25 L71 34 V50 C71 64 50 75 50 75 C50 75 29 64 29 50 V34 Z' fill='%23f59e0b'/><text x='50' y='57' font-family='Arial, sans-serif' font-size='26' font-weight='bold' text-anchor='middle' fill='%23004d30'>P</text></svg>">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -622,11 +624,14 @@
         }
 
         function resolvePIN(c) {
-            if (c.member_pin && c.member_pin.trim() !== '' && c.member_pin !== '-') return c.member_pin;
-            const cleanLast = (c.patient_surname || '').toUpperCase().replace(/[^A-Z]/g, '');
-            const cleanFirst = (c.patient_firstname || '').toUpperCase().replace(/[^A-Z]/g, '');
-            const hash = Math.abs((cleanLast + cleanFirst).split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0));
-            return '12' + String(hash).padStart(10, '0').slice(0, 10);
+            const pinStr = (c && c.member_pin) ? String(c.member_pin).trim() : '';
+            if (!pinStr || pinStr === '-') return '-';
+            const digits = pinStr.replace(/\D/g, '');
+            if (digits.length === 12) {
+                return `${digits.slice(0, 2)}-${digits.slice(2, 11)}-${digits.slice(11)}`;
+            }
+            if (digits.length >= 9 && digits.length <= 14) return digits;
+            return '-';
         }
 
         // Strict MM/DD/YYYY Date Formatter
