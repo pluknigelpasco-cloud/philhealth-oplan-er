@@ -307,16 +307,16 @@
                 
                 <!-- From Date Input -->
                 <div class="col-lg-2 col-md-3 col-sm-6">
-                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
-                        <i class="fa-regular fa-calendar text-success me-1"></i> From Date
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;" id="fromDateLabel">
+                        <i class="fa-solid fa-calendar-check text-success me-1"></i> From Received Date
                     </label>
                     <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="startDateInput" value="">
                 </div>
 
                 <!-- To Date Input -->
                 <div class="col-lg-2 col-md-3 col-sm-6">
-                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;">
-                        <i class="fa-regular fa-calendar-check text-success me-1"></i> To Date
+                    <label class="form-label text-muted small fw-bold mb-1 text-uppercase" style="font-size: 11px;" id="toDateLabel">
+                        <i class="fa-solid fa-calendar-check text-success me-1"></i> To Received Date
                     </label>
                     <input type="date" class="form-control form-control-sm fw-semibold text-primary shadow-sm" id="endDateInput" value="">
                 </div>
@@ -764,6 +764,21 @@
             document.querySelectorAll('.status-chip').forEach(b => b.classList.remove('active'));
             btnElement.classList.add('active');
             filterData();
+        }
+
+        let activeTabPane = 'pane-c';
+
+        function updateDateFilterLabels() {
+            const fromLabel = document.getElementById('fromDateLabel');
+            const toLabel = document.getElementById('toDateLabel');
+
+            if (activeTabPane === 'pane-b') {
+                if (fromLabel) fromLabel.innerHTML = '<i class="fa-solid fa-calendar text-primary me-1"></i> From Admission Date';
+                if (toLabel) toLabel.innerHTML = '<i class="fa-solid fa-calendar-check text-primary me-1"></i> To Admission Date';
+            } else {
+                if (fromLabel) fromLabel.innerHTML = '<i class="fa-solid fa-calendar-check text-success me-1"></i> From Received Date';
+                if (toLabel) toLabel.innerHTML = '<i class="fa-solid fa-calendar-check text-success me-1"></i> To Received Date';
+            }
         }
 
         let filterStartDateStr = '';
@@ -1520,7 +1535,18 @@
                 .subscribe();
         }
 
-        window.addEventListener('DOMContentLoaded', () => fetchDashboardData(false));
+        window.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(btn => {
+                btn.addEventListener('shown.bs.tab', (e) => {
+                    const target = e.target.getAttribute('data-bs-target');
+                    activeTabPane = target ? target.replace('#', '') : 'pane-c';
+                    updateDateFilterLabels();
+                    filterData();
+                });
+            });
+            updateDateFilterLabels();
+            fetchDashboardData(false);
+        });
     </script>
 </body>
 </html>
