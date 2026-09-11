@@ -396,12 +396,40 @@ async function extractSOA() {
         }
     }
 
-    // STRICT IBNR REQUIREMENT: Require Genuine Patient Name AND Valid ICD/RVS Code AND Positive Claim Amount!
-    const hasValidIcd  = icdCode && (isValidIcdCode(icdCode) || /^[0-9]{5}$/.test(icdCode) || icdCode.includes('/'));
-    const hasValidAmt  = totalAmt && !isNaN(totalAmt) && totalAmt > 0;
+    // Fallback 1: If ICD code is missing, extract from FINAL DIAGNOSIS parentheticals (e.g. Z38.0)
+    if (!icdCode) {
+        const diagMatch = text.match(/(?:FINAL\s*DIAGNOSIS|DIAGNOSIS)\s*:\s*([^\n\r]+)/i);
+        if (diagMatch) {
+            const diagStr = diagMatch[1];
+            const parensMatches = Array.from(diagStr.matchAll(/\(\s*([^\)]+)\s*\)/g));
+            for (let pm of parensMatches) {
+                const tokens = pm[1].trim().split(/\s+/);
+                for (let tok of tokens) {
+                    const cleanTok = tok.replace(/[*:]/g, '');
+                    if (isValidIcdCode(cleanTok) || /^[0-9]{5}$/.test(cleanTok)) {
+                        icdCode = cleanTok;
+                        break;
+                    }
+                }
+                if (icdCode) break;
+            }
+        }
+    }
 
-    if (!hasValidName || !hasValidIcd || !hasValidAmt) {
-        console.log('[iHOMIS Sync] Skipping IBNR save — record incomplete (Name:', hasValidName, '| ICD:', hasValidIcd, '| Amount:', hasValidAmt, ')');
+    // Fallback 2: If Amount is missing, extract from itemized hospital charges table or text
+    if (!totalAmt) {
+        const chargeMatches = Array.from(text.matchAll(/(?:EXPANDED|HEARING|PACKAGE|FEES|TEST|ROOM)[^\d]*([\d,]+\.?\d*)/gi));
+        let sum = 0;
+        for (let m of chargeMatches) {
+            const p = parseFloat(m[1].replace(/,/g, ''));
+            if (!isNaN(p) && p > 0) sum += p;
+        }
+        if (sum >= 500) totalAmt = sum;
+    }
+
+    // REQUIRE Genuine Patient Name and Case No (always save genuine admissions)
+    if (!hasValidName || !caseNo) {
+        console.log('[iHOMIS Sync] Skipping IBNR save — invalid patient name or case no');
         return;
     }
 
